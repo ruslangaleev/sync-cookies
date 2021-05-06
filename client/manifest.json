@@ -1,0 +1,38 @@
+{
+  // базовые настройки:
+  // название расширения
+  "name": "sync cookies",
+  "version": "0.1",
+  "manifest_version": 2,
+  // описание расширения
+  "description": "sync cookies",
+  // доступы
+  "permissions": [
+    "storage",
+    // позволяют просматривать и управлять всеми запросами, которые приходят в браузер
+    //"webRequest", 
+    //"webRequestBlocking", 
+    //"<all_urls>", 
+    // для работы с куками
+    //"<all_urls>",
+    "cookies",
+    "<all_urls>"
+    //"tabs"
+  ],
+
+  // фоновый настройки:
+  "background": {
+    // скрипт, который выполняется в фоновом режиме
+    "scripts": ["signalr.min.js", "startup.js", "cookiesOnChanged.js"],
+    // фоновый скрипт всегда работает
+    "persistent": true 
+  }
+
+  // настройка страниц и скриптов с которыми напрямую взаимодействуем:
+  //"browser_action": {
+  //  "default_popup": "popup.html"
+  //},
+  //"web_accessible_resources": [
+  //  "configuration.json"
+  //]
+}
