@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -12,6 +13,7 @@ using SyncCookies.Services.Hubs;
 
 namespace SyncCookies.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CookiesController : ControllerBase
@@ -53,12 +55,30 @@ namespace SyncCookies.Api.Controllers
             });
         }
 
+        [HttpPost("resources")]
+        public async Task<IActionResult> AddResourceInfoAsync(NewResourceInfoDto newResourceInfo)
+        {
+            var resourceInfo = new ResourceInfo
+            {
+                Url = newResourceInfo.Url
+            };
+
+            await _cookieRepo.CreateResourceInfoAsync(new ResourceInfo
+            {
+                Url = newResourceInfo.Url
+            });
+
+            await _cookieRepo.SaveChangesAsync();
+
+            return Ok("Источник добавлен");
+        }
+
         [HttpPost]
-        public async Task<IActionResult> UpdateCookie(NewCookie newCookie)
+        public async Task<IActionResult> UpdateCookie(NewCookieDto newCookie)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest();
+                return BadRequest("Невалидные данные");
             }
 
             var resourceCookie = await _cookieRepo.GetResourceCookieAsync(newCookie.Url);
@@ -88,14 +108,15 @@ namespace SyncCookies.Api.Controllers
                 actualCookie.Value = newCookie.Value;
                 actualCookie.Domain = newCookie.Domain;
 
-                await _cookieRepo.UpdateActualCookie(actualCookie);
+                _cookieRepo.UpdateActualCookie(actualCookie);
             }
 
             await _cookieRepo.SaveChangesAsync();
 
-            await _cookieHub.Clients.All.SendAsync("NewCookie", newCookie);
+            // await _cookieHub.Clients.All.SendAsync("NewCookie", newCookie);
+            await _cookieHub.Clients.AllExcept(new string[] {  }).SendAsync("NewCookie", newCookie);
 
-            return Ok();
+            return Ok("Куки обновлены");
         }
     }
 }

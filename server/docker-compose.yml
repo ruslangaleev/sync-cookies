@@ -1,5 +1,9 @@
 version: '3.4'
 
+networks:
+  dockerapi-dev:
+    driver: bridge
+
 services:
   synccookies.api:
     container_name: api
@@ -13,8 +17,10 @@ services:
     depends_on:
       - db
     environment:
-      DB_CONNECTION_STRING: "User ID=testuser; Password=123; Server=db; Port=5432; Database=SyncCookieTest; sslmode=Require; Trust Server Certificate=true;"
+      DB_CONNECTION_STRING: "User ID=testuser; Password=123; Server=db; Port=5432; Database=SyncCookieTest;"
     command: ["dotnet", "ef", "database update"]
+    networks:
+      - dockerapi-dev
 
   db:
     container_name: db
@@ -28,3 +34,5 @@ services:
     ports:
       - "5432:5432"
     restart: unless-stopped
+    networks:
+      - dockerapi-dev

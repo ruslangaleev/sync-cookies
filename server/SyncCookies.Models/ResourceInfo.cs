@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SyncCookies.Models
 {
-    public class ResourceCookie : BaseModel
+    public class ResourceInfo : BaseModel
     {
         public string Url { get; set; }
 

@@ -3,7 +3,18 @@ using System.Linq;
 
 namespace SyncCookies.Services
 {
-    public class ConnectionMapping<T>
+    public interface IConnectionMapping<T>
+    {
+        int Count { get; }
+
+        void Add(T key, string connectionId);
+
+        IEnumerable<string> GetConnections(T key);
+
+        void Remove(T key, string connectionId);
+    }
+
+    public class ConnectionMapping<T> : IConnectionMapping<T>
     {
         private readonly Dictionary<T, HashSet<string>> _connections = new Dictionary<T, HashSet<string>>();
 

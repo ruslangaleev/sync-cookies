@@ -5,19 +5,21 @@
 */
 
 chrome.cookies.onChanged.addListener(async (changeInfo) => {	
-	//console.log('changeInfo1', changeInfo);
+	console.log('changeInfo', changeInfo);
 
 	const cookieName = changeInfo.cookie.name;
 	const cookieValue = changeInfo.cookie.value;
 	const cookieDomain = changeInfo.cookie.domain;
-	const cookieInfoes = await getFromLocalStorageAsync(RESOURCE_URL);
+	const cookieInfoes = await getFromLocalStorageAsync(COOKIE_INFOES);
 	const even = (name) => cookieName == name;
 
-	//console.log('cookieInfo2', cookieInfoes);
+	// TODO: каждую информацию о куке хранить отдельно в storage, чтобы не проходиться по списку
+
+	console.log('cookieInfo', cookieInfoes);
 
 	const cookie = cookieInfoes.find(info => cookieDomain.indexOf(info.domain) > -1);
 
-	//console.log('cookieInfo3', cookie);
+	console.log('Найденные куки', cookie);
 
 	if (!cookie?.names?.some(even)) {
 		return;
@@ -34,7 +36,9 @@ chrome.cookies.onChanged.addListener(async (changeInfo) => {
 			return;
 		} else {
 			// Обновление произошло со стороны клиента. Необходимо отправить на сервер
-			console.log(`Новый кук ${cookieName}` отправлен на сервер, changeInfo);
+			const cookieInfoes = await getFromLocalStorageAsync(COOKIE_INFOES);
+			await syncCookieClient.updateCookie(cookie.url, cookieName, cookieValue, cookieDomain);
+			console.log(`Новый кук ${cookieName} отправлен на сервер`, changeInfo);
 		}
 	}
 
@@ -121,6 +125,9 @@ const syncCookieClient = {
 	  try {
 		const response = await fetch(server + '/api/cookies', dataRequest);
 	    
+		console.log('Ответ сервера RESPONSE', response);
+		console.log('Ответ сервера JSON', await response.json());
+
 	    // 401:
 	    
 	    if (response.status == 401) {      

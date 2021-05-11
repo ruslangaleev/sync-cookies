@@ -1,6 +1,6 @@
 ﻿namespace SyncCookies.Api.Dtos.Test
 {
-    public class NewCookie
+    public class NewTestCookieDto
     {
         public string Url { get; set; }
 

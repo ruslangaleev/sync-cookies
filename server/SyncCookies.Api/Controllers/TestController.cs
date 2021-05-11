@@ -21,8 +21,37 @@ namespace SyncCookies.Api.Controllers
             _cookieHub = cookieHub;
         }
 
+        [HttpGet("page")]
+        public async Task<IActionResult> GetPageAsync()
+        {
+            var rnd = new Random();
+
+            var text = $"Тестовая страница {rnd.Next()}";
+
+            return Ok(text);
+        }
+
+        [HttpGet("page/withcookies")]
+        public async Task<IActionResult> GetPageWithCookiesAsync()
+        {
+            var rnd = new Random();
+
+            var cookieName = "testcookie";
+            var cookieValue = rnd.Next();
+
+            var text = $"Тестовая страница {rnd.Next()} c изменным куком {cookieName} на значение {cookieValue}";
+
+            Response.Cookies.Append(cookieName, cookieValue.ToString());
+
+            return Ok(text);
+        }
+
+        /// <summary>
+        /// Отправляет сообщение по сокету
+        /// </summary>
+        /// <param name="newCookie">Информация о передаваемом сообщений</param>
         [HttpPost("messages")]
-        public async Task<IActionResult> SendTestMessage(NewCookie newCookie)
+        public async Task<IActionResult> SendTestMessageAsync(NewTestCookieDto newCookie)
         {
             await _cookieHub.Clients.All.SendAsync("NewCookie", newCookie);
 

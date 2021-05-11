@@ -2,7 +2,7 @@
 
 namespace SyncCookies.Api.Dtos.Cookies
 {
-    public class NewCookie
+    public class NewCookieDto
     {
         [Required(ErrorMessage = "Необходимо указать адрес ресурса")]
         public string Url { get; set; }

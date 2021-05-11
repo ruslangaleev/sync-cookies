@@ -7,7 +7,11 @@ namespace SyncCookies.Data
     {
         public DbSet<ActualCookie> ActualCookies { get; set; }
 
-        public DbSet<ResourceCookie> ResourceCookies { get; set; }
+        public DbSet<ResourceInfo> ResourceInfoes { get; set; }
+
+        public DbSet<User> Users { get; set; }
+
+        public DbSet<Client> Clients { get; set; }
 
         public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options)
         {

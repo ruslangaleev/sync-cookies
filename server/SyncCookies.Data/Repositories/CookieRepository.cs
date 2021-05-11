@@ -6,7 +6,9 @@ namespace SyncCookies.Data.Repositories
 {
     public interface ICookieRepository
     {
-        Task<ResourceCookie> GetResourceCookieAsync(string url);
+        Task CreateResourceInfoAsync(ResourceInfo resourceInfo);
+
+        Task<ResourceInfo> GetResourceCookieAsync(string url);
 
         Task<ActualCookie> GetActualCookieAsync(string url, string name);
 
@@ -32,6 +34,11 @@ namespace SyncCookies.Data.Repositories
             await _context.AddAsync(actualCookie);
         }
 
+        public async Task CreateResourceInfoAsync(ResourceInfo resourceInfo)
+        {
+            await _context.ResourceInfoes.AddAsync(resourceInfo);
+        }
+
         public async Task<ActualCookie> GetActualCookieAsync(string url, string name)
         {
             return await _context.ActualCookies
@@ -39,9 +46,9 @@ namespace SyncCookies.Data.Repositories
                 .SingleOrDefaultAsync(t => t.ResourceCookie.Url == url && t.Name == name);
         }
 
-        public async Task<ResourceCookie> GetResourceCookieAsync(string url)
+        public async Task<ResourceInfo> GetResourceCookieAsync(string url)
         {
-            return await _context.ResourceCookies.SingleOrDefaultAsync(t => t.Url == url);
+            return await _context.ResourceInfoes.SingleOrDefaultAsync(t => t.Url == url);
         }
 
         public async Task SaveChangesAsync()

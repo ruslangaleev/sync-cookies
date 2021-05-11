@@ -13,6 +13,6 @@ namespace SyncCookies.Models
         public string Domain { get; set; }
 
         public Guid ResourceCookieId { get; set; }
-        public virtual ResourceCookie ResourceCookie { get; set; }
+        public virtual ResourceInfo ResourceCookie { get; set; }
     }
 }

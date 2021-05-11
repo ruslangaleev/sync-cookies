@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SyncCookies.Data;
@@ -9,9 +10,10 @@ using SyncCookies.Data;
 namespace SyncCookies.Data.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20210507070901_UpdateResourceInfo")]
+    partial class UpdateResourceInfo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,9 +27,6 @@ namespace SyncCookies.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreateAt")
-                        .HasColumnType("timestamp without time zone");
-
                     b.Property<string>("Domain")
                         .HasColumnType("text");
 
@@ -36,9 +35,6 @@ namespace SyncCookies.Data.Migrations
 
                     b.Property<Guid>("ResourceCookieId")
                         .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdateAt")
-                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Value")
                         .HasColumnType("text");
@@ -50,37 +46,11 @@ namespace SyncCookies.Data.Migrations
                     b.ToTable("ActualCookies");
                 });
 
-            modelBuilder.Entity("SyncCookies.Models.Client", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreateAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("UpdateAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Clients");
-                });
-
             modelBuilder.Entity("SyncCookies.Models.ResourceInfo", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreateAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<DateTime>("UpdateAt")
-                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Url")
                         .HasColumnType("text");
@@ -88,38 +58,6 @@ namespace SyncCookies.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ResourceInfoes");
-                });
-
-            modelBuilder.Entity("SyncCookies.Models.User", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AccessToken")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("ClientId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreateAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("text");
-
-                    b.Property<string>("FirstName")
-                        .HasColumnType("text");
-
-                    b.Property<string>("LastName")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("UpdateAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("SyncCookies.Models.ActualCookie", b =>
