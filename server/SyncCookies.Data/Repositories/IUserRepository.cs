@@ -10,7 +10,8 @@ namespace SyncCookies.Data.Repositories
 {
     public interface IUserRepository
     {
-        Task<User> GetUserAsync(Guid userId);
+        Task<User> GetAsync(Guid userId);
+        Task<User> GetASync(string email);
         //Task<User> GetByUserNameAsync(string userName);
         Task<List<User>> GetAllUsers();
         Task<List<User>> GetAllByClientId(Guid clientId);
@@ -47,7 +48,7 @@ namespace SyncCookies.Data.Repositories
             return await _context.Users.ToListAsync();
         }
 
-        public async Task<User> GetUserAsync(Guid userId)
+        public async Task<User> GetAsync(Guid userId)
         {
             return await _context.Users.FindAsync(userId);
         }
@@ -75,6 +76,11 @@ namespace SyncCookies.Data.Repositories
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<User> GetASync(string email)
+        {
+            return await _context.Users.SingleOrDefaultAsync(t => t.Email == email);
         }
     }
 }
