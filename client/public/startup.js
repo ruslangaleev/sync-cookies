@@ -8,8 +8,7 @@ const cookieInfoes = [
 setInLocalStorageAsync(COOKIE_INFOES, cookieInfoes);
 setInLocalStorageAsync(SERVER_URL, 'http://localhost:58674');
 
-//const TEST_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiNTQwNTdmY2MtZDFmMi00Mzk1LTgzZjAtNTI1YzE5NGFiM2JmIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiVVNFUiIsIkxJRkVUSU1FIjoiMTYyMDcyOTQ5NCIsImlzcyI6Ik15QXV0aFNlcnZlciIsImF1ZCI6Ik15QXV0aENsaWVudCJ9.GioH8LkTxLBrIoVuW_BY9Rm8gtvwxscZ5Jskn__6Ywc';
-const TEST_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiY2ZkMWIzMGMtYzMwYi00Y2RiLTkwN2MtZjE3NTNjZWRlYjQwIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiVVNFUiIsIkxJRkVUSU1FIjoiMTYyMDcyOTUzNSIsImlzcyI6Ik15QXV0aFNlcnZlciIsImF1ZCI6Ik15QXV0aENsaWVudCJ9.FEHSlDgE-qVMu_PLKnCgjxHbixTfKGjlj__Q634Kox4';
+const ACCESS_TOKEN = 'sc_access_token';
 
 //----------------------------------------------------
 
@@ -17,10 +16,11 @@ let connection;
 
 async function initialSignalR() {
 	const serverAddress = await getFromLocalStorageAsync(SERVER_URL);
+	const accessToken = await getFromLocalStorageAsync(ACCESS_TOKEN)
 
 	connection = new signalR.HubConnectionBuilder()
 	    //.withUrl(serverAddress + "/hubs/cookie") // рабочая версия
-	    .withUrl(serverAddress + "/hubs/cookie", { accessTokenFactory: () => TEST_TOKEN }) // с приминением jwt
+	    .withUrl(serverAddress + "/hubs/cookie", { accessTokenFactory: () => accessToken }) // с приминением jwt
 	    .configureLogging(signalR.LogLevel.Information)
 	    .build();	
 
@@ -34,13 +34,12 @@ async function initialSignalR() {
 
 		//console.log('cookie', cookie);
 		// Записываем cookie в storage чтобы в дальнейшем можно было отличать, куки были обновлены со стороны сервера или вручную
-		const key = `sc_fromserver_${cookie.url}_${cookie.name}`;
+		console.log(`NEW | URL: ${cookie.url} | NAME: ${cookie.name} | VALUE: ${cookie.value} | DOMAIN: ${cookie.domain}`);
+
+		const key = `sc_from_${cookie.url}_name_${cookie.name}`;
+		console.log('new key', key);
 		await setInLocalStorageAsync(key, cookie);
 		await setCookie(cookie);
-
-		console.log(key, await getFromLocalStorageAsync(key));
-
-		console.log('Обновлен кук', cookie);
 	});
 
 	connection.onclose(start);
@@ -54,15 +53,11 @@ async function start() {
 		console.log('Соединение с сервером установлено');
 	} catch (err) {
 		console.log(`Не удалось установить соединение с сервером | err: ${err}`);
-		//setTimeout(start, 5000);
+		setTimeout(start, 5000);
 	}
 }
 
-//initialSignalR();
-
 initialSignalR().then(() => start());
-
-//start();
 
 //----------------------------------------------------
 

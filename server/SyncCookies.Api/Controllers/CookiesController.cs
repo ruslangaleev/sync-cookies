@@ -94,6 +94,7 @@ namespace SyncCookies.Api.Controllers
             }
 
             var actualCookie = await _cookieRepo.GetActualCookieAsync(newCookie.Url, newCookie.Name);
+                
             if (actualCookie == null)
             {
                 await _cookieRepo.CreateActualCookieAsync(new ActualCookie
