@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using SyncCookies.Models;
@@ -13,7 +12,7 @@ namespace SyncCookies.Data.Repositories
         Task<User> GetAsync(Guid userId);
         Task<User> GetASync(string email);
         //Task<User> GetByUserNameAsync(string userName);
-        Task<List<User>> GetAllUsers();
+        Task<List<User>> GetAllAsync();
         Task<List<User>> GetAllByClientId(Guid clientId);
         Task AddAsync(User user);
         Task UpdateAsync(User user);
@@ -43,7 +42,7 @@ namespace SyncCookies.Data.Repositories
             return await _context.Users.Where(t => t.ClientId == clientId).ToListAsync();
         }
 
-        public async Task<List<User>> GetAllUsers()
+        public async Task<List<User>> GetAllAsync()
         {
             return await _context.Users.ToListAsync();
         }

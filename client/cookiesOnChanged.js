@@ -72,7 +72,16 @@ const syncCookieClient = {
 	  const server = await getFromLocalStorageAsync(SERVER_URL);
 	  
 	  try {
-		const response = await fetch(server + `/api/cookies?url=${url}&name=${name}`);
+	  	const dataRequest = {
+	  		method: 'GET',
+		    headers: {
+		      'Content-Type': 'application/json',
+		      'Accept': 'application/json',
+		      'Authorization': 'Bearer ' + TEST_TOKEN
+		    },
+		};
+
+		const response = await fetch(server + `/api/cookies?url=${url}&name=${name}`, dataRequest);
 	    
 	    // 401:
 	    
@@ -117,7 +126,7 @@ const syncCookieClient = {
 	    headers: {
 	      'Content-Type': 'application/json',
 	      'Accept': 'application/json',
-	      //'Authorization': 'Bearer ' + accessToken
+	      'Authorization': 'Bearer ' + TEST_TOKEN
 	    },
 	    body: JSON.stringify(cookieInfo)
 	  };

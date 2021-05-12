@@ -23,6 +23,14 @@ namespace SyncCookies.Api.Controllers
             _userRepo = userRepo;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var users = await _userRepo.GetAllAsync();
+
+            return Ok(users);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateUserAsync(Guid clientId, string firstName, string lastName)
         {
