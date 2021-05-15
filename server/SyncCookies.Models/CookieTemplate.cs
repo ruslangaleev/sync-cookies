@@ -4,12 +4,14 @@ using System.Text;
 
 namespace SyncCookies.Models
 {
-    public class Client : BaseModel
+    /// <summary>
+    /// Информация о куке, которую необходимо синхронизировать.
+    /// </summary>
+    public class CookieTemplate : BaseModel
     {
-        /// <summary>
-        /// Любое наименование: Email аккаунта, логин, ФИО и т.д.
-        /// </summary>
         public string Name { get; set; }
+
+        public string Domain { get; set; }
 
         public Guid ResourceId { get; set; }
         public virtual Resource Resource { get; set; }

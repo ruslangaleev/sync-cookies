@@ -12,8 +12,6 @@ namespace SyncCookies.Models
 
         public string Email { get; set; }
 
-        public Guid ClientId { get; set; }
-
         public string AccessToken { get; set; }
     }
 }

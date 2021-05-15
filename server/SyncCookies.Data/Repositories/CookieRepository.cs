@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using SyncCookies.Models;
 
@@ -6,15 +7,11 @@ namespace SyncCookies.Data.Repositories
 {
     public interface ICookieRepository
     {
-        Task CreateResourceInfoAsync(ResourceInfo resourceInfo);
+        Task<Cookie> GetAsync(Guid cookieId, bool include = false);
 
-        Task<ResourceInfo> GetResourceCookieAsync(string url);
+        void UpdateCookie(Cookie actualCookie);
 
-        Task<ActualCookie> GetActualCookieAsync(string url, string name);
-
-        void UpdateActualCookie(ActualCookie actualCookie);
-
-        Task CreateActualCookieAsync(ActualCookie actualCookie);
+        Task CreateCookieAsync(Cookie actualCookie);
 
         // TODO: Временно здесь
         Task SaveChangesAsync();
@@ -29,26 +26,21 @@ namespace SyncCookies.Data.Repositories
             _context = context;
         }
 
-        public async Task CreateActualCookieAsync(ActualCookie actualCookie)
+        public async Task CreateCookieAsync(Cookie actualCookie)
         {
             await _context.AddAsync(actualCookie);
         }
 
-        public async Task CreateResourceInfoAsync(ResourceInfo resourceInfo)
+        public async Task<Cookie> GetAsync(Guid cookieId, bool include = false)
         {
-            await _context.ResourceInfoes.AddAsync(resourceInfo);
-        }
-
-        public async Task<ActualCookie> GetActualCookieAsync(string url, string name)
-        {
-            return await _context.ActualCookies
-                .Include(t=> t.ResourceCookie)
-                .SingleOrDefaultAsync(t => t.ResourceCookie.Url == url && t.Name == name);
-        }
-
-        public async Task<ResourceInfo> GetResourceCookieAsync(string url)
-        {
-            return await _context.ResourceInfoes.SingleOrDefaultAsync(t => t.Url == url);
+            if (include)
+            {
+                return await _context.ActualCookies.Include(t => t.CookieTemplate).Include(t => t.Client).SingleOrDefaultAsync(t => t.Id == cookieId);
+            }
+            else
+            {
+                return await _context.ActualCookies.FindAsync(cookieId);
+            }
         }
 
         public async Task SaveChangesAsync()
@@ -56,7 +48,7 @@ namespace SyncCookies.Data.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public void UpdateActualCookie(ActualCookie actualCookie)
+        public void UpdateCookie(Cookie actualCookie)
         {
             _context.Update(actualCookie);
         }

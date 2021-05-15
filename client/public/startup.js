@@ -57,7 +57,7 @@ async function start() {
 	}
 }
 
-initialSignalR().then(() => start());
+//initialSignalR().then(() => start());
 
 //----------------------------------------------------
 

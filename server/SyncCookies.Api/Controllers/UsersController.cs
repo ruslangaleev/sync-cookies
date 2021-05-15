@@ -10,14 +10,14 @@ using SyncCookies.Services;
 
 namespace SyncCookies.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/users")]
     [ApiController]
     public class UsersController : ControllerBase
     {
         private readonly IClientRepository _clientRepo;
-        private readonly IUserRepository _userRepo;
+        private readonly UserRepository _userRepo;
 
-        public UsersController(IClientRepository clientRepo, IUserRepository userRepo)
+        public UsersController(IClientRepository clientRepo, UserRepository userRepo)
         {
             _clientRepo = clientRepo;
             _userRepo = userRepo;
@@ -32,19 +32,8 @@ namespace SyncCookies.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateUserAsync(Guid clientId, string firstName, string lastName)
+        public async Task<IActionResult> CreateUserAsync(string firstName, string lastName)
         {
-            if (Guid.Empty == clientId)
-            {
-                return BadRequest($"Не указан {nameof(clientId)}");
-            }
-
-            var client = await _clientRepo.GetAsync(clientId);
-            if (client == null)
-            {
-                return BadRequest($"Клиент с идентификатором {clientId} не найден");
-            }
-
             var email = Guid.NewGuid().ToString();
             var token = TokenGenerator.GenerateTokenForUser(email);
 
@@ -52,7 +41,6 @@ namespace SyncCookies.Api.Controllers
             {
                 FirstName = firstName,
                 LastName = lastName,
-                ClientId = clientId,
                 Email = email,
                 AccessToken = token
             };
@@ -65,7 +53,6 @@ namespace SyncCookies.Api.Controllers
                 user.Email,
                 user.FirstName,
                 user.LastName,
-                user.ClientId,
                 user.CreateAt,
                 user.UpdateAt,
                 access_token = token

@@ -16,67 +16,41 @@ using SyncCookies.Services.Hubs;
 namespace SyncCookies.Api.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/cookies")]
     [ApiController]
     public class CookiesController : ControllerBase
     {
         private readonly ICookieRepository _cookieRepo;
+        private readonly IClientRepository _clientRepo;
         private readonly IHubContext<CookieHub> _cookieHub;
-        private readonly IUserRepository _userRepo;
+        private readonly UserRepository _userRepo;
+        private readonly IResourceRepository _resourceRepo;
+        private readonly ICookieTemplateRepository _cookieTemplateRepo;
         private readonly IConnectionMapping<string> _connectionMapping;
 
-        public CookiesController(ICookieRepository cookieRepo, IHubContext<CookieHub> cookieHub, IUserRepository userRepo, IConnectionMapping<string> connectionMapping)
+        public CookiesController(ICookieRepository cookieRepo, IHubContext<CookieHub> cookieHub, UserRepository userRepo, IConnectionMapping<string> connectionMapping,
+            IClientRepository clientRepo, IResourceRepository resourceRepo, ICookieTemplateRepository cookieTemplateRepo)
         {
             _cookieRepo = cookieRepo;
             _cookieHub = cookieHub;
             _userRepo = userRepo;
             _connectionMapping = connectionMapping;
+            _clientRepo = clientRepo;
+            _resourceRepo = resourceRepo;
+            _cookieTemplateRepo = cookieTemplateRepo;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetCookies(string url, string name)
+        public async Task<IActionResult> GetCookies(Guid cookieId)
         {
-            if (string.IsNullOrEmpty(url))
-            {
-                return BadRequest();
-            }
+            var cookie = await _cookieRepo.GetAsync(cookieId);
 
-            if (string.IsNullOrEmpty(name))
-            {
-                return BadRequest();
-            }
-
-            var actualCookie = await _cookieRepo.GetActualCookieAsync(url, name);
-
-            if (actualCookie == null)
+            if (cookie == null)
             {
                 return NotFound();
             }
 
-            return Ok(new {
-                name = actualCookie.Name,
-                value = actualCookie.Value,
-                domain = actualCookie.Domain,
-                url = actualCookie.ResourceCookie.Url
-            });
-        }
-
-        [HttpPost("resources")]
-        public async Task<IActionResult> AddResourceInfoAsync(NewResourceInfoDto newResourceInfo)
-        {
-            var resourceInfo = new ResourceInfo
-            {
-                Url = newResourceInfo.Url
-            };
-
-            await _cookieRepo.CreateResourceInfoAsync(new ResourceInfo
-            {
-                Url = newResourceInfo.Url
-            });
-
-            await _cookieRepo.SaveChangesAsync();
-
-            return Ok("Источник добавлен");
+            return Ok(cookie);
         }
 
         [HttpPost]
@@ -87,41 +61,26 @@ namespace SyncCookies.Api.Controllers
                 return BadRequest("Невалидные данные");
             }
 
-            var resourceCookie = await _cookieRepo.GetResourceCookieAsync(newCookie.Url);
-            if (resourceCookie == null)
+            var emailClaim = User.Claims.Where(t => t.Type == ClaimsIdentity.DefaultNameClaimType).Single();
+            var user = await _userRepo.GetAsync(emailClaim.Value);
+
+            var cookie = await _cookieRepo.GetAsync(newCookie.CookieId);
+
+            if (cookie == null)
             {
-                return BadRequest($"Указанный {newCookie.Url} не найден");
+                return NotFound();
             }
 
-            var actualCookie = await _cookieRepo.GetActualCookieAsync(newCookie.Url, newCookie.Name);
-                
-            if (actualCookie == null)
+            if (cookie.Value == newCookie.Value)
             {
-                await _cookieRepo.CreateActualCookieAsync(new ActualCookie
-                {
-                    Domain = newCookie.Domain,
-                    Name = newCookie.Name,
-                    Value = newCookie.Value,
-                    ResourceCookieId = resourceCookie.Id
-                });
-            }
-            else
-            {
-                if (actualCookie.Value == newCookie.Value)
-                {
-                    return BadRequest("Попытка повторно обновить куки");
-                }
-
-                actualCookie.Value = newCookie.Value;
-                actualCookie.Domain = newCookie.Domain;
-
-                _cookieRepo.UpdateActualCookie(actualCookie);
+                return BadRequest();
             }
 
+            cookie.Value = newCookie.Value;
+
+            _cookieRepo.UpdateCookie(cookie);
             await _cookieRepo.SaveChangesAsync();
 
-            var claim = User.Claims.Where(t => t.Type == ClaimsIdentity.DefaultNameClaimType).Single();
-            var user = await _userRepo.GetASync(claim.Value);
             var connection = _connectionMapping.GetConnections(user.Email);
             await _cookieHub.Clients.AllExcept(new string[] { connection.SingleOrDefault() }).SendAsync("NewCookie", newCookie);
 

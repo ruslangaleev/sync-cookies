@@ -77,9 +77,11 @@ namespace SyncCookies.Api
                 options.UseNpgsql(GetConnectionString()));
 
             services.AddSingleton<IConnectionMapping<string>, ConnectionMapping<string>>();
+            services.AddScoped<IResourceRepository, ResourceRepository>();
             services.AddScoped<ICookieRepository, CookieRepository>();
             services.AddScoped<IClientRepository, ClientRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<ICookieTemplateRepository, CookieTemplateRepository>();
 
             services.AddSignalR(t => {
                 t.EnableDetailedErrors = true;

@@ -11,9 +11,9 @@ namespace SyncCookies.Services.Hubs
         //    new ConnectionMapping<string>();
 
         private readonly IConnectionMapping<string> _connectionMapping;
-        private readonly IUserRepository _userRepo;
+        private readonly UserRepository _userRepo;
 
-        public CookieHub(IConnectionMapping<string> connectionMapping, IUserRepository userRepo)
+        public CookieHub(IConnectionMapping<string> connectionMapping, UserRepository userRepo)
         {
             _connectionMapping = connectionMapping;
             _userRepo = userRepo;

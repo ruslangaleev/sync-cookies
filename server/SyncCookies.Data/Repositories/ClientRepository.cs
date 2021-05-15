@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -9,10 +10,12 @@ namespace SyncCookies.Data.Repositories
 {
     public interface IClientRepository
     {
-        Task<Page<Client>> GetAll();
+        Task<Page<Client>> GetByResourceAsync(Guid resourceId);
         Task<Client> GetAsync(Guid clientId);
-        Task<Guid> Create(Client client);
-        Task Remove(Guid id);
+        Task CreateClientAsync(Client client);
+        Task CreateChannelAsync(Channel channel);
+        Task RemoveAsync(Client client);
+        Task SaveChangesAsync();
     }
 
     public class ClientRepository : IClientRepository
@@ -24,15 +27,17 @@ namespace SyncCookies.Data.Repositories
             _context = context;
         }
 
-        public async Task<Guid> Create(Client client)
+        public async Task CreateChannelAsync(Channel channel)
+        {
+            await _context.Channels.AddAsync(channel);
+        }
+
+        public async Task CreateClientAsync(Client client)
         {
             client.CreateAt = DateTime.UtcNow;
             client.UpdateAt = DateTime.UtcNow;
 
             await _context.Clients.AddAsync(client);
-            await _context.SaveChangesAsync();
-
-            return client.Id;
         }
 
         public async Task<Client> GetAsync(Guid clientId)
@@ -40,28 +45,26 @@ namespace SyncCookies.Data.Repositories
             return await _context.Clients.FindAsync(clientId);
         }
 
-        public async Task<Page<Client>> GetAll()
+        public async Task<Page<Client>> GetByResourceAsync(Guid resourceId)
         {
-            var items = await _context.Clients.ToListAsync();
+            var clients = await _context.Clients.Where(t => t.ResourceId == resourceId).ToListAsync();
 
             return new Page<Client>
             {
-                Data = items,
+                Data = clients,
                 PageCount = 1000,
                 PageNumber = 1,
-                TotalCount = items.Count
+                TotalCount = clients.Count
             };
         }
 
-        public async Task Remove(Guid id)
+        public async Task RemoveAsync(Client client)
         {
-            var client = await _context.Clients.SingleOrDefaultAsync(t => t.Id == id);
-            if (client == null)
-            {
-                return;
-            }
-
             _context.Clients.Remove(client);
+        }
+
+        public async Task SaveChangesAsync()
+        {
             await _context.SaveChangesAsync();
         }
     }
