@@ -4,6 +4,8 @@ using System.Text;
 
 namespace SyncCookies.Models
 {
+    // TODO: Переименовать на Sub - подписка
+
     public class Channel : BaseModel
     {
         public Guid ClientId { get; set; }

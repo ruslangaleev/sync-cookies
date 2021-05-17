@@ -15,10 +15,14 @@ namespace SyncCookies.Api.Controllers
     public class CookieTemplatesController : ControllerBase
     {
         private readonly ICookieTemplateRepository _cookieTemplateRepo;
+        private readonly IClientRepository _clientRepo;
+        private readonly ICookieRepository _cookieRepo;
 
-        public CookieTemplatesController(ICookieTemplateRepository cookieTemplateRepo)
+        public CookieTemplatesController(ICookieTemplateRepository cookieTemplateRepo, IClientRepository clientRepo, ICookieRepository cookieRepo)
         {
             _cookieTemplateRepo = cookieTemplateRepo;
+            _clientRepo = clientRepo;
+            _cookieRepo = cookieRepo;
         }
 
         [HttpGet("{resourceId}")]
@@ -42,6 +46,19 @@ namespace SyncCookies.Api.Controllers
             await _cookieTemplateRepo.CreateAsync(cookieTemplate);
             await _cookieTemplateRepo.SaveChangesAsync();
 
+            // Добавляем новые шаблоны в куки
+            var clients = await _clientRepo.GetByResourceAsync(newCookieTemplateDto.ResourceId);
+            var cookies = clients.Data.Select(t => new Cookie
+            {
+                ClientId = t.Id,
+                CookieTemplateId = cookieTemplate.Id
+            }).ToArray();
+
+            await _cookieRepo.CreateRangeCookieAsync(cookies);
+            await _cookieRepo.SaveChangesAsync();
+
+            // TODO: Уведомлять всех пользователей что теперь по такому что куку нужно отправлять значение
+
             return Ok(cookieTemplate);
         }
 
@@ -56,6 +73,8 @@ namespace SyncCookies.Api.Controllers
             }
 
             _cookieTemplateRepo.Remove(template);
+
+            // TODO: Уведомлять всех пользователей что теперь по такому что куку не нужно отправлять значение
 
             return Ok("Успешно удалено");
         }

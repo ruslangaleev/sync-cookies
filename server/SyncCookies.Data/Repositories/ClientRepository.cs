@@ -11,7 +11,8 @@ namespace SyncCookies.Data.Repositories
     public interface IClientRepository
     {
         Task<Page<Client>> GetByResourceAsync(Guid resourceId);
-        Task<Client> GetAsync(Guid clientId);
+        Task<Client> GetByClientAsync(Guid clientId);
+        Task<Page<Client>> GetByUserAsync(Guid userId);
         Task CreateClientAsync(Client client);
         Task CreateChannelAsync(Channel channel);
         Task RemoveAsync(Client client);
@@ -40,7 +41,7 @@ namespace SyncCookies.Data.Repositories
             await _context.Clients.AddAsync(client);
         }
 
-        public async Task<Client> GetAsync(Guid clientId)
+        public async Task<Client> GetByClientAsync(Guid clientId)
         {
             return await _context.Clients.FindAsync(clientId);
         }
@@ -55,6 +56,27 @@ namespace SyncCookies.Data.Repositories
                 PageCount = 1000,
                 PageNumber = 1,
                 TotalCount = clients.Count
+            };
+        }
+
+        public async Task<Page<Client>> GetByUserAsync(Guid userId)
+        {
+            var channels = await _context.Channels.Where(t => t.UserId == userId).ToListAsync();
+
+            var ids = channels.Select(t => t.ClientId);
+
+            var clients = await _context.Clients
+                .Include(t => t.Cookies)
+                .ThenInclude(t => t.CookieTemplate)
+                .Where(t => ids.Any(p => p == t.Id))
+                .ToListAsync();
+
+            return new Page<Client>
+            {
+              Data = clients,
+              PageCount = 1000,
+              PageNumber = 1,
+              TotalCount = clients.Count
             };
         }
 

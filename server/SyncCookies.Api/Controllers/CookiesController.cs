@@ -23,12 +23,12 @@ namespace SyncCookies.Api.Controllers
         private readonly ICookieRepository _cookieRepo;
         private readonly IClientRepository _clientRepo;
         private readonly IHubContext<CookieHub> _cookieHub;
-        private readonly UserRepository _userRepo;
+        private readonly IUserRepository _userRepo;
         private readonly IResourceRepository _resourceRepo;
         private readonly ICookieTemplateRepository _cookieTemplateRepo;
         private readonly IConnectionMapping<string> _connectionMapping;
 
-        public CookiesController(ICookieRepository cookieRepo, IHubContext<CookieHub> cookieHub, UserRepository userRepo, IConnectionMapping<string> connectionMapping,
+        public CookiesController(ICookieRepository cookieRepo, IHubContext<CookieHub> cookieHub, IUserRepository userRepo, IConnectionMapping<string> connectionMapping,
             IClientRepository clientRepo, IResourceRepository resourceRepo, ICookieTemplateRepository cookieTemplateRepo)
         {
             _cookieRepo = cookieRepo;
@@ -40,10 +40,43 @@ namespace SyncCookies.Api.Controllers
             _cookieTemplateRepo = cookieTemplateRepo;
         }
 
+        /// <summary>
+        /// Вернет все куки по всем клиентам для указанного пользователя.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
+        public async Task<IActionResult> GetCookies()
+        {
+            var emailClaim = User.Claims.Where(t => t.Type == ClaimsIdentity.DefaultNameClaimType).Single();
+            var user = await _userRepo.GetAsync(emailClaim.Value);
+
+            var clients = await _clientRepo.GetByUserAsync(user.Id);
+
+            var result = clients.Data.Select(t => 
+            {
+                return new
+                {
+                    ClientId = t.Id,
+                    Name = t.Name,
+                    Cookies = t.Cookies.Select(p => 
+                    {
+                        return new
+                        {
+                            Id = p.Id,
+                            Name = p.CookieTemplate.Name,
+                            Value = p.Value
+                        };
+                    })
+                };
+            });
+
+            return Ok(result);
+        }
+
+        [HttpGet("{cookieId}")]
         public async Task<IActionResult> GetCookies(Guid cookieId)
         {
-            var cookie = await _cookieRepo.GetAsync(cookieId);
+            var cookie = await _cookieRepo.GetByCookieIdAsync(cookieId);
 
             if (cookie == null)
             {
@@ -64,7 +97,7 @@ namespace SyncCookies.Api.Controllers
             var emailClaim = User.Claims.Where(t => t.Type == ClaimsIdentity.DefaultNameClaimType).Single();
             var user = await _userRepo.GetAsync(emailClaim.Value);
 
-            var cookie = await _cookieRepo.GetAsync(newCookie.CookieId);
+            var cookie = await _cookieRepo.GetByCookieIdAsync(newCookie.CookieId);
 
             if (cookie == null)
             {

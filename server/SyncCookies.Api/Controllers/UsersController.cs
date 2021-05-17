@@ -15,9 +15,9 @@ namespace SyncCookies.Api.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IClientRepository _clientRepo;
-        private readonly UserRepository _userRepo;
+        private readonly IUserRepository _userRepo;
 
-        public UsersController(IClientRepository clientRepo, UserRepository userRepo)
+        public UsersController(IClientRepository clientRepo, IUserRepository userRepo)
         {
             _clientRepo = clientRepo;
             _userRepo = userRepo;

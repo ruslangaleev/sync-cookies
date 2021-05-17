@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using SyncCookies.Models;
@@ -7,11 +8,15 @@ namespace SyncCookies.Data.Repositories
 {
     public interface ICookieRepository
     {
-        Task<Cookie> GetAsync(Guid cookieId, bool include = false);
+        Task<Cookie> GetByCookieIdAsync(Guid cookieId);
+
+        Task<Page<Cookie>> GetByClientIdAsync(Guid clientId);
 
         void UpdateCookie(Cookie actualCookie);
 
-        Task CreateCookieAsync(Cookie actualCookie);
+        Task CreateCookieAsync(Cookie cookies);
+
+        Task CreateRangeCookieAsync(Cookie[] cookies);
 
         // TODO: Временно здесь
         Task SaveChangesAsync();
@@ -31,16 +36,27 @@ namespace SyncCookies.Data.Repositories
             await _context.AddAsync(actualCookie);
         }
 
-        public async Task<Cookie> GetAsync(Guid cookieId, bool include = false)
+        public async Task CreateRangeCookieAsync(Cookie[] cookies)
         {
-            if (include)
+            await _context.ActualCookies.AddRangeAsync(cookies);
+        }
+
+        public async Task<Page<Cookie>> GetByClientIdAsync(Guid clientId)
+        {
+            var cookies = await _context.ActualCookies.Where(t => t.ClientId == clientId).ToListAsync();
+
+            return new Page<Cookie>
             {
-                return await _context.ActualCookies.Include(t => t.CookieTemplate).Include(t => t.Client).SingleOrDefaultAsync(t => t.Id == cookieId);
-            }
-            else
-            {
-                return await _context.ActualCookies.FindAsync(cookieId);
-            }
+                Data = cookies,
+                PageCount = 1000,
+                PageNumber = 1,
+                TotalCount = cookies.Count
+            };
+        }
+
+        public async Task<Cookie> GetByCookieIdAsync(Guid cookieId)
+        {
+            return await _context.ActualCookies.FindAsync(cookieId);
         }
 
         public async Task SaveChangesAsync()

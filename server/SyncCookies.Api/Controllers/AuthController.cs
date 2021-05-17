@@ -16,9 +16,9 @@ namespace SyncCookies.Api.Controllers
     {
         private readonly string _password = "Mt5LmSZXHVFS";
         private readonly string _userName = "admin";
-        private readonly UserRepository _userRepo;
+        private readonly IUserRepository _userRepo;
 
-        public AuthController(UserRepository userRepo)
+        public AuthController(IUserRepository userRepo)
         {
             _userRepo = userRepo;
         }

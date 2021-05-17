@@ -13,5 +13,7 @@ namespace SyncCookies.Models
 
         public Guid ResourceId { get; set; }
         public virtual Resource Resource { get; set; }
+
+        public virtual IEnumerable<Cookie> Cookies { get; set; }
     }
 }
