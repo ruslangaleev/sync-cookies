@@ -1,26 +1,23 @@
 {
-  // название расширения
   "name": "sync cookies",
   "version": "0.1",
   "manifest_version": 2,
-  // описание расширения
   "description": "sync cookies",
-  // доступы
   "permissions": [
     "storage",
     "cookies",
     "<all_urls>"
   ],
-
-  // фоновый настройки:
+  "icons": { 
+    "16": "pechenie-16x16.png",
+    "48": "pechenie-48x48.png",
+    "128": "pechenie-128x128.png" },  
   "background": {
-    // скрипт, который выполняется в фоновом режиме
     "scripts": ["signalr.min.js", "chromeStorageTypes.js", "syncCookieClient.js", "startup.js", "cookiesOnChanged.js"],
-    // фоновый скрипт всегда работает
     "persistent": true 
   },
   "browser_action": {
     "default_popup": "index.html"
   },
-  "content_security_policy": "script-src 'self' 'sha256-bIHiQ8VUEUX+b/7FieBRVhurMF7hJmXLeQSUy3kY/eQ='; object-src 'self'"
+  "content_security_policy": "script-src 'self' 'sha256-A5S2zOz0DEczHfth+DWvuftVNd169Uo6nVlrplQZADg='; object-src 'self'"
 }

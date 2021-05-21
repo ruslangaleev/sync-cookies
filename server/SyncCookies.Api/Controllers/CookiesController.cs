@@ -67,7 +67,8 @@ namespace SyncCookies.Api.Controllers
                         {
                             Id = p.Id,
                             Name = p.CookieTemplate.Name,
-                            Value = p.Value
+                            Value = p.Value,
+                            Domain = p.CookieTemplate.Domain
                         };
                     })
                 };
@@ -86,7 +87,15 @@ namespace SyncCookies.Api.Controllers
                 return NotFound();
             }
 
-            return Ok(cookie);
+            var template = await _cookieTemplateRepo.GetByTemplateAsync(cookie.CookieTemplateId);
+            var resource = await _resourceRepo.GetAsync(template.ResourceId);
+
+            return Ok(new {
+                url = resource.Url,
+                value = cookie.Value,
+                name = template.Name,
+                domain = template.Domain
+            });
         }
 
         [HttpPost]

@@ -1,6 +1,6 @@
 /*global chrome*/
 import React from 'react';
-import { TextField, Button, Snackbar } from '@material-ui/core';
+import { TextField, Button, Snackbar, Typography, Hidden  } from '@material-ui/core';
 import MuiAlert from '@material-ui/lab/Alert';
 import { makeStyles } from '@material-ui/core/styles';
 import {
@@ -10,16 +10,7 @@ import {
   Link
 } from "react-router-dom";
 import { ACCESS_TOKEN, SERVER_ADDRESS, IS_ENABLE } from './constants/chromeStorageTypes';
-
-const useStyles = makeStyles((theme) => ({
-  root: {
-    width: '500px',
-    height: '500px'
-    // '& > * + *': {
-    //   marginTop: theme.spacing(2),
-    // },
-  },
-}));
+import './App.css';
 
 async function setInLocalStorageAsync(key, value) {
 	return await new Promise((resolve, reject) => {
@@ -40,7 +31,7 @@ async function getFromLocalStorageAsync(key) {
 function App() {
   return (
     <Router>
-      <div>
+      <div className="app">
         <nav>
           <ul>
             <li>
@@ -109,13 +100,13 @@ class Home extends React.Component {
     if (this.state.isEnable) {
       return(
         <Button variant="contained" onClick={() => this.disableSync()}>
-          Выключить
+          Disable
         </Button>
       )
     } else {
       return (
         <Button variant="contained" color="primary" onClick={() => this.enableSync()}>
-          Включить
+          Enable
         </Button>
       )
     }
@@ -124,9 +115,27 @@ class Home extends React.Component {
   render() {
     return (
       <div>
-        Token: {this.state.accessToken}
-        Server: {this.state.serverAddress}
-        IsEnable: {this.state.isEnable}
+        <h2>Auth token:</h2>
+        <div>
+          <div className='token'>
+            {this.state.accessToken}
+          </div>
+          <Button variant="contained" onClick={() => this.props.history.push("/token")}>
+            Edit
+          </Button>
+        </div>
+        
+        <h2>Server address:</h2>
+        <div>
+          {this.state.serverAddress}
+          <Button variant="contained" onClick={() => this.props.history.push("/server")}>
+            Edit
+          </Button>
+        </div>
+
+        <h2>Status:</h2>
+        {this.state.isEnable}
+
         {this.EnableButton()}
       </div>
     );

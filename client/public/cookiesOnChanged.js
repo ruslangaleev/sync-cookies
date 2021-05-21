@@ -24,7 +24,7 @@ chrome.cookies.onChanged.addListener(async (changeInfo) => {
 		return;
 	}
 
-	console.log('COOKIE ON CHANGED | COOKIE INFOES', cookieInfoes);
+	//console.log('COOKIE ON CHANGED | COOKIE INFOES', cookieInfoes);
 
 	/*
 		Куки обновлены/добавлен новый
@@ -61,6 +61,7 @@ async function setCookie(cookieSource) {
 			url: cookieSource.url,
 			name: cookieSource.name,
 			value: cookieSource.value,
+			domain: cookieSource.domain
 		}, (cookie) => {
 			resolve(cookie);
 		})

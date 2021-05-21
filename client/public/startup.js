@@ -53,8 +53,23 @@ async function initialSignalR() {
 
 async function initialCookies() {
 	const cookieInfoes = await syncCookieClient.getCookies();
-	console.log('STARTUP | INITIAL COOKIE INFOES DONE', cookieInfoes);
 	await setInLocalStorageAsync(COOKIE_INFOES, cookieInfoes);
+	
+	// Все полученные куки обновляем в браузере
+	cookieInfoes.forEach(cookieInfo => {
+		cookieInfo.cookies.forEach(async (cookie) => {
+			const key = UPDATE_FROM_SERVER + `_${cookieInfo.url}_${cookie.name}`;
+			await setInLocalStorageAsync(key, cookie);
+			await setCookie({
+				url: cookieInfo.url,
+				name: cookie.name,
+				value: cookie.value,
+				domain: cookie.domain
+			});
+		});
+	});
+
+	console.log('STARTUP | INITIAL COOKIE INFOES DONE', cookieInfoes);
 }
 
 async function startSignalR() {

@@ -1,5 +1,7 @@
 const syncCookieClient = {
-	getCookie: async (cookieId) => {	  
+	getCookie: async (cookieId) => {
+	  const PRE = `SYNC COOKIE CLIENT | GET COOKIE BY ${cookieId}`;
+		
 	  const server = await getFromLocalStorageAsync(SERVER_ADDRESS);
 	  const accessToken = await getFromLocalStorageAsync(ACCESS_TOKEN);
 
@@ -13,7 +15,7 @@ const syncCookieClient = {
 		    },
 		};
 
-		const response = await fetch(server + `/api/cookies?cookieId=${cookieId}`, dataRequest);
+		const response = await fetch(server + `/api/cookies/${cookieId}`, dataRequest);
 	    
 	    // 401:
 	    
@@ -26,6 +28,7 @@ const syncCookieClient = {
 	    // 400:
 	    
 	    const content = await response.json();
+		console.log(`${PRE} | CONTENT JSON`, content);
 	    
 	    if (response.status == 400) {      
 	      return {
