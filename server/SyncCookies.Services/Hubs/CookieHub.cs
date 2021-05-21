@@ -11,9 +11,9 @@ namespace SyncCookies.Services.Hubs
         //    new ConnectionMapping<string>();
 
         private readonly IConnectionMapping<string> _connectionMapping;
-        private readonly UserRepository _userRepo;
+        private readonly IUserRepository _userRepo;
 
-        public CookieHub(IConnectionMapping<string> connectionMapping, UserRepository userRepo)
+        public CookieHub(IConnectionMapping<string> connectionMapping, IUserRepository userRepo)
         {
             _connectionMapping = connectionMapping;
             _userRepo = userRepo;
@@ -36,7 +36,7 @@ namespace SyncCookies.Services.Hubs
 
             _connectionMapping.Remove(email, connectionId);
 
-            return base.OnDisconnectedAsync(exception);
+            return base.OnDisconnectedAsync(exception); 
         }
     }
 }

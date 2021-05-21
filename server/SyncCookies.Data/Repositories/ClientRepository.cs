@@ -66,6 +66,7 @@ namespace SyncCookies.Data.Repositories
             var ids = channels.Select(t => t.ClientId);
 
             var clients = await _context.Clients
+                .Include(t => t.Resource)
                 .Include(t => t.Cookies)
                 .ThenInclude(t => t.CookieTemplate)
                 .Where(t => ids.Any(p => p == t.Id))

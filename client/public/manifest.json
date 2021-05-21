@@ -15,12 +15,12 @@
   // фоновый настройки:
   "background": {
     // скрипт, который выполняется в фоновом режиме
-    "scripts": ["signalr.min.js", "startup.js", "cookiesOnChanged.js"],
+    "scripts": ["signalr.min.js", "chromeStorageTypes.js", "syncCookieClient.js", "startup.js", "cookiesOnChanged.js"],
     // фоновый скрипт всегда работает
     "persistent": true 
   },
   "browser_action": {
     "default_popup": "index.html"
   },
-  "content_security_policy": "script-src 'self' 'sha256-ahTD77hX89PuYqMd0QZ8E3VMtN0BACZ/m9+0ohD8dsU='; object-src 'self'"
+  "content_security_policy": "script-src 'self' 'sha256-bIHiQ8VUEUX+b/7FieBRVhurMF7hJmXLeQSUy3kY/eQ='; object-src 'self'"
 }

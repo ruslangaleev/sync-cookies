@@ -1,50 +1,53 @@
-
-
-/*
-	[] Проверка подтягивания куков с сервера
-*/
-
-chrome.cookies.onChanged.addListener(async (changeInfo) => {	
-	//console.log('changeInfo', changeInfo);
+chrome.cookies.onChanged.addListener(async (changeInfo) => {
+	const isEnable = await getFromLocalStorageAsync(IS_ENABLE);
+	if (!isEnable) {
+		return;
+	}
 
 	const cookieName = changeInfo.cookie.name;
 	const cookieValue = changeInfo.cookie.value;
 	const cookieDomain = changeInfo.cookie.domain;
 	const cookieInfoes = await getFromLocalStorageAsync(COOKIE_INFOES);
-	const even = (name) => cookieName == name;
 
-	// TODO: каждую информацию о куке хранить отдельно в storage, чтобы не проходиться по списку
-
-	//console.log('cookieInfo', cookieInfoes);
-
-	const cookie = cookieInfoes.find(info => cookieDomain.indexOf(info.domain) > -1);
-
-	//console.log('Найденные куки', cookie);
-
-	if (!cookie?.names?.some(even)) {
+	if (!cookieInfoes) {
 		return;
 	}
+
+	// По какому домену пришли куки?
+	const resource = cookieInfoes.find(info => info.url.indexOf(cookieDomain) > -1);
+	if (!resource) {
+		return;
+	}
+
+	const cookie = resource.cookies.find(cookie => cookie.name == cookieName);
+	if (!cookie) {
+		return;
+	}
+
+	console.log('COOKIE ON CHANGED | COOKIE INFOES', cookieInfoes);
 
 	/*
 		Куки обновлены/добавлен новый
 	*/
 	if (changeInfo.cause == 'explicit' && !changeInfo.removed) {
-
-		const key = `sc_from_${cookie.url}_name_${cookieName}`;
+		const key = UPDATE_FROM_SERVER + `_${resource.url}_${cookieName}`;
+		console.log(`COOKIE ON CHANGED | STORAGE KEY: ${key}`);
 		const existCookie = await getFromLocalStorageAsync(key);
 		if (existCookie?.value != cookieValue) {
-			console.log(`UPDATE | NAME: ${cookieName} | VALUE: ${cookieValue}`);
+			console.log(`UPDATE | COOKIEID: ${cookie.id} | NAME: ${cookieName} | VALUE: ${cookieValue}`);
 			// Обновление произошло со стороны клиента. Необходимо отправить на сервер
-			const cookieInfoes = await getFromLocalStorageAsync(COOKIE_INFOES);
-			await syncCookieClient.updateCookie(cookie.url, cookieName, cookieValue, cookieDomain);
+			//const cookieInfoes = await getFromLocalStorageAsync(COOKIE_INFOES);
+			await syncCookieClient.updateCookie(cookie.id, cookieValue);
 		}
+
+		return;
 	}
 
 	/*
 		Куки удалены
 	*/
 	if (changeInfo.cause == 'explicit' && changeInfo.removed) {
-		const existCookie = await syncCookieClient.getCookies(cookieInfo.url, cookieName);
+		const existCookie = await syncCookieClient.getCookie(cookie.id);
 		await setCookie(existCookie);
 
 		console.log(`С сервера обновлен кук ${cookieName}`, existCookie);
@@ -58,118 +61,8 @@ async function setCookie(cookieSource) {
 			url: cookieSource.url,
 			name: cookieSource.name,
 			value: cookieSource.value,
-			domain: cookieSource.domain
 		}, (cookie) => {
 			resolve(cookie);
 		})
 	});
-}
-
-const syncCookieClient = {
-	getCookies: async (url, name) => {	  
-	  const server = await getFromLocalStorageAsync(SERVER_URL);
-	  const accessToken = await getFromLocalStorageAsync(ACCESS_TOKEN);
-
-	  try {
-	  	const dataRequest = {
-	  		method: 'GET',
-		    headers: {
-		      'Content-Type': 'application/json',
-		      'Accept': 'application/json',
-		      'Authorization': 'Bearer ' + accessToken
-		    },
-		};
-
-		const response = await fetch(server + `/api/cookies?url=${url}&name=${name}`, dataRequest);
-	    
-	    // 401:
-	    
-	    if (response.status == 401) {      
-	      return {
-	        errorMessage: 'У клиента нет доступа'
-	      };
-	    }
-	    
-	    // 400:
-	    
-	    const content = await response.json();
-	    
-	    if (response.status == 400) {      
-	      return {
-	        errorMessage: content.errorMessage,
-	        accessToken: content.access_token
-	      };
-	    }
-	    
-	    // 200:
-	    
-	    return content;
-	  } catch (error) {
-	  	return {
-	    	errorMessage: 'Ошибка отправления запроса. Либо сервер недоступен, либо запрос составлен неверно'
-	    };
-	  }
-	},
-	updateCookie: async (url, name, value, domain) => {
-	  const server = await getFromLocalStorageAsync(SERVER_URL);
-	  
-	  const cookieInfo = {
-	    url: url,
-	    name: name,
-	    value: value,
-	    domain: domain
-	  }
-
-	  console.log(`TRY SEND | URL: ${url} | NAME: ${name} | VALUE: ${value} | DOMAIN: ${domain}`);
-
-	  const accessToken = await getFromLocalStorageAsync(ACCESS_TOKEN);
-	  
-	  const dataRequest = {
-	    method: 'POST',
-	    headers: {
-	      'Content-Type': 'application/json',
-	      'Accept': 'application/json',
-	      'Authorization': 'Bearer ' + accessToken
-	    },
-	    body: JSON.stringify(cookieInfo)
-	  };
-	  
-	  try {
-		const response = await fetch(server + '/api/cookies', dataRequest);
-	    
-		console.log(`RESPONSE | STATUS: ${response.status}`);
-
-	    // 401:
-	    
-	    if (response.status == 401) {      
-	      return {
-	        errorMessage: 'У клиента нет доступа'
-	      };
-	    }
-	    
-	    // 400:
-	    
-	    const content = await response.json();
-		console.log(`RESPONSE CONTENT | CONTENT: ${content}`);
-	    
-	    if (response.status == 400) {      
-	      return {
-	        errorMessage: content.errorMessage,
-	        accessToken: content.access_token
-	      };
-	    }
-	    
-	    // 200:
-
-		console.log(`SENT | URL: ${url} | NAME: ${name} | VALUE: ${value} | DOMAIN: ${domain}`);
-	    
-	    return true;
-	  } catch (error) {
-	  	setTimeout(() => { syncCookieClient.updateCookie(url, name, value, domain) }, 5000); // TODO: изменить на 2000
-	  	// return {
-	    // 	errorMessage: 'Ошибка отправления запроса. Либо сервер недоступен, либо запрос составлен неверно'
-	    // };
-		console.log(`ERROR SEND | ERROR: ${error}`);
-	  }		
-	}
 }

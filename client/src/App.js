@@ -9,9 +9,7 @@ import {
   Route,
   Link
 } from "react-router-dom";
-
-const ACCESS_TOKEN = 'sc_access_token';
-const RESOURCE_INFOES = 'sc_resource_infoes';
+import { ACCESS_TOKEN, SERVER_ADDRESS, IS_ENABLE } from './constants/chromeStorageTypes';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -49,37 +47,20 @@ function App() {
               <Link to="/">Home</Link>
             </li>
             <li>
-              <Link to="/about">About</Link>
-            </li>
-            <li>
-              <Link to="/users">Users</Link>
-            </li>
-            <li>
               <Link to="/token">Token</Link>
-            </li>                  
+            </li>
             <li>
-              <Link to="/resources/new">NewResource</Link>
-            </li>             
+              <Link to="/server">Server</Link>
+            </li>            
           </ul>
         </nav>
 
-        {/* A <Switch> looks through its children <Route>s and
-            renders the first one that matches the current URL. */}
         <Switch>
-          <Route path="/about">
-            <About />
-          </Route>
-          <Route path="/users">
-            <Users />
-          </Route>
           <Route path="/token">
             <Token />
           </Route>
-          <Route path="/resources/new">
-            <ResourceDetails />
-          </Route>
-          <Route path="/resources/:url">
-            <ResourceDetails />
+          <Route path="/server">
+            <Server />
           </Route>          
           <Route path="/">
             <Home />
@@ -90,44 +71,87 @@ function App() {
   );
 }
 
-function Home() {
-  const [token, setToken] = React.useState('');
-  const [resourceInfoes, setResourceInfoes] = React.useState('');
+class Home extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      accessToken: '',
+      serverAddress: '',
+      isEnable: false
+    };
+  }
 
-  const refreshData = async () => {
+  async componentDidMount() {
     const token = await getFromLocalStorageAsync(ACCESS_TOKEN);
-    setToken(token);
+    const server = await getFromLocalStorageAsync(SERVER_ADDRESS);
+    const isEnable = await getFromLocalStorageAsync(IS_ENABLE);
 
-    const resourceInfoes = await getFromLocalStorageAsync(RESOURCE_INFOES);
-    setResourceInfoes(JSON.stringify(resourceInfoes));
+    this.setState({
+      accessToken: token,
+      serverAddress: server,
+      isEnable: isEnable
+    });
+  }
+
+  async enableSync() {
+    await setInLocalStorageAsync(IS_ENABLE, true);
+    chrome.extension.getBackgroundPage().startup();
+    this.setState({ isEnable: true });
+  }
+
+  async disableSync() {
+    await setInLocalStorageAsync(IS_ENABLE, false);
+    chrome.extension.getBackgroundPage().endup();
+    this.setState({ isEnable: false });
+  }
+
+  EnableButton() {
+    if (this.state.isEnable) {
+      return(
+        <Button variant="contained" onClick={() => this.disableSync()}>
+          Выключить
+        </Button>
+      )
+    } else {
+      return (
+        <Button variant="contained" color="primary" onClick={() => this.enableSync()}>
+          Включить
+        </Button>
+      )
+    }
+  }
+
+  render() {
+    return (
+      <div>
+        Token: {this.state.accessToken}
+        Server: {this.state.serverAddress}
+        IsEnable: {this.state.isEnable}
+        {this.EnableButton()}
+      </div>
+    );
+  }
+}
+
+function Server() {
+  const [server, setServer] = React.useState('');
+
+  const changeServer = (event) => {
+    setServer(event.target.value);
   };
 
-  return (
+  const saveServer = async () => {
+    await setInLocalStorageAsync(SERVER_ADDRESS, server);
+  };
+
+  return(
     <div>
-      <Button variant="contained" color="primary" onClick={refreshData}>
-        Обновить
+      <TextField id="outlined-basic" label="Адрес сервера" variant="outlined" onChange={changeServer} />
+      <Button variant="contained" color="primary" onClick={saveServer}>
+        Сохранить
       </Button>
-      Token: {token}
-      ResourceInfoes: {resourceInfoes}
-      <nav>
-        <ul>
-          {resourceInfoes?.map(item => {
-            <li>
-              <Link to="/resources/:url">{item.url}</Link>
-            </li>
-          })}
-        </ul>
-      </nav>      
     </div>
-  );
-}
-
-function About() {
-  return <h2>About</h2>;
-}
-
-function Users() {
-  return <h2>Users</h2>;
+  );  
 }
 
 function Token() {
@@ -145,49 +169,7 @@ function Token() {
     <div>
       <TextField id="outlined-basic" label="Токен авторизации" variant="outlined" onChange={changeToken} />
       <Button variant="contained" color="primary" onClick={saveToken}>
-        Добавить токен
-      </Button>
-    </div>
-  );
-}
-
-function ResourceDetails() {
-  const [addressResource, setAddressResource] = React.useState('');
-  const [domainResource, setDomainResource] = React.useState('');
-
-  const changeAddressResource = (event) => {
-    setAddressResource(event.target.value);
-  };
-
-  const changeDomainResource = (event) => {
-    setDomainResource(event.target.value);
-  };
-
-  const saveResource = async () => {
-    let resourceInfoes = await getFromLocalStorageAsync(RESOURCE_INFOES);
-    if (!resourceInfoes) {
-      resourceInfoes = [ {
-        url: addressResource,
-        domain: domainResource,
-        names: []
-      } ];
-    } else {
-      resourceInfoes.push({
-        url: addressResource,
-        domain: domainResource,
-        names: []
-      });
-    }
-
-    await setInLocalStorageAsync(RESOURCE_INFOES, resourceInfoes);
-  };
-
-  return(
-    <div>
-      <TextField id="outlined-basic" label="Адрес источника" variant="outlined" onChange={changeAddressResource} />
-      <TextField id="outlined-basic" label="Домен источника" variant="outlined" onChange={changeDomainResource} />
-      <Button variant="contained" color="primary" onClick={saveResource}>
-        Добавить источник
+        Сохранить
       </Button>
     </div>
   );

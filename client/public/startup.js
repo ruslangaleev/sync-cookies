@@ -1,65 +1,80 @@
-const COOKIE_INFOES = 'sc_cookie_infoes';
-const SERVER_URL = 'sc_server_url';
-
-const cookieInfoes = [
-	{ url: 'https://zakupki.kontur.ru', domain: 'kontur.ru', names: ['token', 'auth.check', 'device', 'ngtoken', 'portaluserid', 'auth.sid', '.AUTHZAKUPKI', 'testcookie'] },
-	{ url: 'http://localhost:58674', domain: 'localhost', names: ['testcookie'] }
-]
-setInLocalStorageAsync(COOKIE_INFOES, cookieInfoes);
-setInLocalStorageAsync(SERVER_URL, 'http://localhost:58674');
-
-const ACCESS_TOKEN = 'sc_access_token';
-
-//----------------------------------------------------
-
 let connection;
 
+async function startup() {
+	// После установки расширения, необходимо проверять, запушена ли синхронизация
+	const isEnable = await getFromLocalStorageAsync(IS_ENABLE);
+	if (!isEnable) {
+		return;
+	}
+
+	console.log(`${STARTUP_PRE} START CONFIG`);
+
+	await initialSignalR();
+	await initialCookies();
+
+	console.log(`${STARTUP_PRE} END CONFIG`);
+}
+
+async function endup() {
+	try {
+		console.log(`${STARTUP_PRE} SIGNALR TRY DISCONNECT`);
+		await connection.stop();
+		console.log(`${STARTUP_PRE} SIGNALR DISCONNECTED`);
+	} catch {
+		console.log(`${STARTUP_PRE} SIGNALR ERROR DISCONNECT`);
+		setTimeout(startSignalR, 5000);
+	}
+}
+
 async function initialSignalR() {
-	const serverAddress = await getFromLocalStorageAsync(SERVER_URL);
+	const serverAddress = await getFromLocalStorageAsync(SERVER_ADDRESS);
 	const accessToken = await getFromLocalStorageAsync(ACCESS_TOKEN)
 
 	connection = new signalR.HubConnectionBuilder()
-	    //.withUrl(serverAddress + "/hubs/cookie") // рабочая версия
 	    .withUrl(serverAddress + "/hubs/cookie", { accessTokenFactory: () => accessToken }) // с приминением jwt
 	    .configureLogging(signalR.LogLevel.Information)
-	    .build();	
+	    .build();
 
-/* Поступление сообщение из сервера */
 	connection.on('NewCookie', async (cookie) => {
-		/*
-	    chrome.cookies.getAll({ url: "http://localhost:5000" }, cookies => {
-	    	console.log('cookies', cookies);
-	    });
-	    */
+		console.log(`NEW COOKIE | ID: ${cookie.id} | NAME: ${cookie.name} | VALUE: ${cookie.value} | URL: ${cookie.url}`);
 
-		//console.log('cookie', cookie);
-		// Записываем cookie в storage чтобы в дальнейшем можно было отличать, куки были обновлены со стороны сервера или вручную
-		console.log(`NEW | URL: ${cookie.url} | NAME: ${cookie.name} | VALUE: ${cookie.value} | DOMAIN: ${cookie.domain}`);
-
-		const key = `sc_from_${cookie.url}_name_${cookie.name}`;
-		console.log('new key', key);
+		const key = UPDATE_FROM_SERVER + `_${cookie.url}_${cookie.name}`;
+		console.log(`RECEIVE COOKIE | STORAGE KEY: ${key}`);
 		await setInLocalStorageAsync(key, cookie);
 		await setCookie(cookie);
 	});
 
-	connection.onclose(start);
+	connection.onclose(startSignalR);
 
-	console.log('Конфигурация для соединения по сокетам выполнена');
+	console.log(`${STARTUP_PRE} SIGNALR CONFIG DONE`);
+
+	await startSignalR();
 }
 
-async function start() {
+async function initialCookies() {
+	const cookieInfoes = await syncCookieClient.getCookies();
+	console.log('STARTUP | INITIAL COOKIE INFOES DONE', cookieInfoes);
+	await setInLocalStorageAsync(COOKIE_INFOES, cookieInfoes);
+}
+
+async function startSignalR() {
 	try {
+		// Если при подключении выбрасывает exception и после переключении флага на DISABLE
+		const isEnable = await getFromLocalStorageAsync(IS_ENABLE);
+		if (!isEnable) {
+			return;
+		}		
+
+		console.log(`${STARTUP_PRE} TRY SIGNALR CONNECT`);
 		await connection.start();
-		console.log('Соединение с сервером установлено');
-	} catch (err) {
-		console.log(`Не удалось установить соединение с сервером | err: ${err}`);
-		setTimeout(start, 5000);
+		console.log(`${STARTUP_PRE} SIGNALR CONNECTED`);
+	} catch {
+		console.log(`${STARTUP_PRE} SIGNALR ERROR CONNECT`);
+		setTimeout(startSignalR, 5000);
 	}
 }
 
-//initialSignalR().then(() => start());
-
-//----------------------------------------------------
+startup();
 
 async function setInLocalStorageAsync(key, value) {
 	return await new Promise((resolve, reject) => {

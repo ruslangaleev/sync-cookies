@@ -56,8 +56,11 @@ namespace SyncCookies.Api.Controllers
             {
                 return new
                 {
+                    ResourceId = t.ResourceId,
+                    Url = t.Resource.Url,
                     ClientId = t.Id,
                     Name = t.Name,
+                    //Domain = "",
                     Cookies = t.Cookies.Select(p => 
                     {
                         return new
@@ -114,8 +117,17 @@ namespace SyncCookies.Api.Controllers
             _cookieRepo.UpdateCookie(cookie);
             await _cookieRepo.SaveChangesAsync();
 
+            var template = await _cookieTemplateRepo.GetByTemplateAsync(cookie.CookieTemplateId);
+            var resource = await _resourceRepo.GetAsync(template.ResourceId);
+
             var connection = _connectionMapping.GetConnections(user.Email);
-            await _cookieHub.Clients.AllExcept(new string[] { connection.SingleOrDefault() }).SendAsync("NewCookie", newCookie);
+            await _cookieHub.Clients.AllExcept(new string[] { connection.SingleOrDefault() }).SendAsync("NewCookie", new 
+            { 
+                id = cookie.Id,
+                value = cookie.Value,
+                name = template.Name,
+                url = resource.Url
+            });
 
             return Ok("Куки обновлены");
         }
