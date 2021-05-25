@@ -30,9 +30,20 @@ services:
       POSTGRES_PASSWORD: "123"
       POSTGRES_DB: "SyncCookieTest"
     volumes:
-      - "./postgres/data:/var/lib/postgres/data"
+      - "./postgres/data:/var/lib/postgresql/data"
     ports:
       - "5432:5432"
     restart: unless-stopped
     networks:
       - dockerapi-dev
+  proxy:
+    image: nginx:latest
+    volumes:
+      - ./nginx.test.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    depends_on:
+      - synccookies.api
+    networks:
+      - dockerapi-dev      
