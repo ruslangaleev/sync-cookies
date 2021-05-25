@@ -17,11 +17,11 @@ jobs:
       with:
         dotnet-version: 3.1.x
     - name: Restore dependencies
-      run: dotnet restore ./server
+      run: dotnet restore ./server/SyncCookies.Api
     - name: Build
-      run: dotnet build ./server --no-restore
+      run: dotnet build ./server/SyncCookies.Api --no-restore
     - name: Test
-      run: dotnet test ./server --no-build --verbosity normal
+      run: dotnet test ./server/SyncCookies.Api --no-build --verbosity normal
   publish:
     needs: [build]
     runs-on: ubuntu-latest
@@ -38,9 +38,9 @@ jobs:
         with:
           dotnet-version: 3.1.x
       - name: Restore dependencies
-        run: dotnet restore ./server
+        run: dotnet restore ./server/SyncCookies.Api
       - name: Build
-        run: dotnet build ./server --no-restore  
+        run: dotnet build ./server/SyncCookies.Api --no-restore  
       - name: Publish files to VPS via SSH key
         uses: garygrossgarten/github-action-scp@release
         with:
