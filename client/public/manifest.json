@@ -1,8 +1,8 @@
 {
-  "name": "sync cookies",
+  "name": "SyncCookies",
   "version": "0.1",
   "manifest_version": 2,
-  "description": "sync cookies",
+  "description": "Синхронизирует куки с разных устройств под одну учетную запись",
   "permissions": [
     "storage",
     "cookies",
