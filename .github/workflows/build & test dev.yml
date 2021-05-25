@@ -54,7 +54,7 @@ jobs:
     needs: [publish]
     runs-on: ubuntu-latest
     steps:
-    - name: test docker-compose up
+    - name: test docker-compose rebuild
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.SERVER_IP }}
@@ -63,14 +63,4 @@ jobs:
         port: ${{ secrets.SERVER_PORT }}
         # -- build - перестраивает контейнеры
         # -f docker_compose_file_name - указание docker-compose файла
-        script: docker-compose -p test down
-    - name: test docker-compose up
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.SERVER_IP }}
-        username: ${{ secrets.USER_NAME }}
-        key: ${{ secrets.SSH_KEY }}
-        port: ${{ secrets.SERVER_PORT }}
-        # -- build - перестраивает контейнеры
-        # -f docker_compose_file_name - указание docker-compose файла
-        script: docker-compose -f /home/github/sync-cookies/docker-compose.yml -p test up -d --build        
+        script: docker-compose -f /home/github/sync-cookies/server/docker-compose.yml -p test up -d --build
