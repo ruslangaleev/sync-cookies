@@ -1,0 +1,25 @@
+{
+  // название расширения
+  "name": "sync cookies",
+  "version": "0.1",
+  "manifest_version": 2,
+  // описание расширения
+  "description": "sync cookies",
+  // доступы
+  "permissions": [
+    "storage",
+    "cookies",
+    "<all_urls>"
+  ],
+
+  // фоновый настройки:
+  "background": {
+    // скрипт, который выполняется в фоновом режиме
+    "scripts": ["signalr.min.js", "startup.js", "cookiesOnChanged.js"],
+    // фоновый скрипт всегда работает
+    "persistent": true 
+  },
+  "browser_action": {
+    "default_popup": "index.html"
+  }
+}

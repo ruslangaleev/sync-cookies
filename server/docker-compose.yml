@@ -1,0 +1,22 @@
+version: '3.4'
+
+services:
+  synccookies.api:
+    image: ${DOCKER_REGISTRY-}synccookiesapi
+    build:
+      context: .
+      dockerfile: SyncCookies.Api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - db
+    command: ["dotnet", "ef", "database update"]
+
+  db:
+    image: postgres
+    restart: unless-stopped
+
+  proxy:
+    image: nginx:latest
+    restart: unless-stopped
+    depends_on:
+      - synccookies.api   

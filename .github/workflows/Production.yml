@@ -1,0 +1,66 @@
+name: Production
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET 3.1.x
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.x
+    - name: Restore dependencies
+      run: dotnet restore ./server/SyncCookies.Api
+    - name: Build
+      run: dotnet build ./server/SyncCookies.Api --no-restore
+    - name: Test
+      run: dotnet test ./server/SyncCookies.Api --no-build --verbosity normal
+  publish:
+    needs: [build]
+    runs-on: ubuntu-latest
+    env:
+      # Переменные окружения
+      SSH_KEY: ${{ secrets.SSH_KEY }}
+      SERVER_PORT: ${{ secrets.SERVER_PORT }}
+      SERVER_IP: ${{ secrets.SERVER_IP }}
+      USER_NAME: ${{ secrets.USER_NAME }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET 3.1.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.x
+      - name: Restore dependencies
+        run: dotnet restore ./server/SyncCookies.Api
+      - name: Build
+        run: dotnet build ./server/SyncCookies.Api --no-restore  
+      - name: Publish files to VPS via SSH key
+        uses: garygrossgarten/github-action-scp@release
+        with:
+          local: ./.
+          host: ${{ secrets.SERVER_IP }}
+          remote: ${{ secrets.SERVER_DIR }}
+          port: ${{ secrets.SERVER_PORT }}
+          username: ${{ secrets.USER_NAME }}
+          privateKey: ${{ secrets.SSH_KEY }}
+  restart:
+    needs: [publish]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Rebuild
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.USER_NAME }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.SERVER_PORT }}
+        # -- build - перестраивает контейнеры
+        # -f docker_compose_file_name - указание docker-compose файла
+        script: docker-compose -f /home/github/sync-cookies/server/docker-compose.yml up -d --build

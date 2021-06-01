@@ -1,0 +1,10 @@
+.app {
+  width: 500px;
+}
+
+.token {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
