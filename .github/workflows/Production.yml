@@ -1,10 +1,10 @@
-name: Test
+name: Production
 
 on:
   push:
-    branches: [ dev ]
+    branches: [ main ]
   pull_request:
-    branches: [ dev ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -46,7 +46,7 @@ jobs:
         with:
           local: ./.
           host: ${{ secrets.SERVER_IP }}
-          remote: ${{ secrets.SERVER_TEST_DIR }}
+          remote: ${{ secrets.SERVER_PROD_DIR }}
           port: ${{ secrets.SERVER_PORT }}
           username: ${{ secrets.USER_NAME }}
           privateKey: ${{ secrets.SSH_KEY }}
@@ -61,4 +61,4 @@ jobs:
         username: ${{ secrets.USER_NAME }}
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SERVER_PORT }}
-        script: docker-compose -f /home/github/sync-cookies/test/server/docker-compose.yml -f /home/github/sync-cookies/test/server/docker-compose.override.yml -p test up -d --build
+        script: docker-compose -f /home/github/sync-cookies/prod/server/docker-compose.yml -f /home/github/sync-cookies/prod/server/docker-compose.prod.yml -p prod up -d --build

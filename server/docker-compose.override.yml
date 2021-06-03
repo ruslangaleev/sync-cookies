@@ -20,7 +20,7 @@ services:
     environment:
       POSTGRES_USER: "testuser"
       POSTGRES_PASSWORD: "123"
-      POSTGRES_DB: "SyncCookieTest"
+      POSTGRES_DB: "SyncCookiesTest"
     volumes:
       - "./postgres/test/data:/var/lib/postgresql/data"
     ports:
