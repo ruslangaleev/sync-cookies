@@ -1,38 +1,38 @@
 version: '3.4'
 
 networks:
-  synccookies-test:
+  synccookies-prod:
     driver: bridge
 
 services:
   synccookies.api:
-    container_name: api
-    image: ${DOCKER_REGISTRY-}synccookiesapi
+    container_name: api_prod
+    image: ${DOCKER_REGISTRY-}synccookiesapi:1.0
     ports:
-      - "8082:80"
+      - "5000:80"
     environment:
       DB_CONNECTION_STRING: "User ID=testuser; Password=123; Server=db; Port=5432; Database=SyncCookiesTest;"
     networks:
-      - synccookies-test
+      - synccookies-prod
 
   db:
-    container_name: db
+    container_name: db_prod
     environment:
       POSTGRES_USER: "testuser"
       POSTGRES_PASSWORD: "123"
       POSTGRES_DB: "SyncCookieTest"
     volumes:
-      - "./postgres/test/data:/var/lib/postgresql/data"
+      - "./postgres/prod/data:/var/lib/postgresql/data"
     ports:
-      - "8081:5432"
+      - "5432:5432"
     networks:
-      - synccookies-test
+      - synccookies-prod
 
   proxy:
-    container_name: proxy
+    container_name: proxy_prod
     volumes:
-      - ./nginx.test.conf:/etc/nginx/nginx.conf
+      - ./nginx.prod.conf:/etc/nginx/nginx.conf
     ports:
-      - "8080:8080"
+      - "80:80"
     networks:
-      - synccookies-test    
+      - synccookies-prod    

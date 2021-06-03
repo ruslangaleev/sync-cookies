@@ -2,9 +2,9 @@ name: Production
 
 on:
   push:
-    branches: [ main ]
+    branches: [ dev ]
   pull_request:
-    branches: [ main ]
+    branches: [ dev ]
 
 jobs:
   build:
@@ -40,13 +40,13 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore ./server/SyncCookies.Api
       - name: Build
-        run: dotnet build ./server/SyncCookies.Api --no-restore  
+        run: dotnet build ./server/SyncCookies.Api --no-restore
       - name: Publish files to VPS via SSH key
         uses: garygrossgarten/github-action-scp@release
         with:
           local: ./.
           host: ${{ secrets.SERVER_IP }}
-          remote: ${{ secrets.SERVER_DIR }}
+          remote: ${{ secrets.SERVER_TEST_DIR }}
           port: ${{ secrets.SERVER_PORT }}
           username: ${{ secrets.USER_NAME }}
           privateKey: ${{ secrets.SSH_KEY }}
@@ -61,6 +61,4 @@ jobs:
         username: ${{ secrets.USER_NAME }}
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SERVER_PORT }}
-        # -- build - перестраивает контейнеры
-        # -f docker_compose_file_name - указание docker-compose файла
-        script: docker-compose -f /home/github/sync-cookies/server/docker-compose.yml up -d --build
+        script: docker-compose -f /home/github/sync-cookies/prod/server/docker-compose.yml -f /home/github/sync-cookies/prod/server/docker-compose.ovveride.yml -p test up -d --build
