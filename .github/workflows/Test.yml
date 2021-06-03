@@ -61,4 +61,4 @@ jobs:
         username: ${{ secrets.USER_NAME }}
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SERVER_PORT }}
-        script: docker-compose -f /home/github/sync-cookies/prod/server/docker-compose.yml -f /home/github/sync-cookies/prod/server/docker-compose.ovveride.yml -p test up -d --build
+        script: docker-compose -f /home/github/sync-cookies/test/server/docker-compose.yml -f /home/github/sync-cookies/test/server/docker-compose.ovveride.yml -p test up -d --build
