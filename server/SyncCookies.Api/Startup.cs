@@ -94,9 +94,9 @@ namespace SyncCookies.Api
                 //This is to generate the Default UI of Swagger Documentation  
                 swagger.SwaggerDoc("v1", new OpenApiInfo  
                 {   
-                    Version= "Prev Commit fbfea09667fb259cccbddf8df4bf73a8d0c5fdaa",
+                    Version= "v1",
                     Title = "JWT Token Authentication API",
-                    Description="ASP.NET Core 3.1 Web API" });
+                    Description="Prev Commit 56416690e5a811dbecac9d2efb0a78fbcde246d3" });
                 // To Enable authorization using Swagger (JWT)
                 swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
                 {  
