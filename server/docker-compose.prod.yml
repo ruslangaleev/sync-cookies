@@ -22,7 +22,7 @@ services:
       POSTGRES_PASSWORD: "HXFa8KyfjqsQ"
       POSTGRES_DB: "SyncCookies"
     volumes:
-      - "./postgres/prod/data:/var/lib/postgresql/data"
+      - "./postgres/data:/var/lib/postgresql/data"
     ports:
       - "5432:5432"
     networks:

@@ -22,7 +22,7 @@ services:
       POSTGRES_PASSWORD: "123"
       POSTGRES_DB: "SyncCookiesTest"
     volumes:
-      - "./postgres/test/data:/var/lib/postgresql/data"
+      - "./postgres/data:/var/lib/postgresql/data:rw"
     ports:
       - "8081:5432"
     networks:
