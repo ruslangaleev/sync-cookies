@@ -7,7 +7,7 @@ networks:
 services:
   synccookies.api:
     container_name: api_prod
-    image: ${DOCKER_REGISTRY-}synccookiesapi:1.0
+    image: ${DOCKER_REGISTRY-}synccookiesapi:1.0.0
     ports:
       - "5000:80"
     environment:

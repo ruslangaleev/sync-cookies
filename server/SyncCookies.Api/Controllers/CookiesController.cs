@@ -60,7 +60,6 @@ namespace SyncCookies.Api.Controllers
                     Url = t.Resource.Url,
                     ClientId = t.Id,
                     Name = t.Name,
-                    //Domain = "",
                     Cookies = t.Cookies.Select(p => 
                     {
                         return new
