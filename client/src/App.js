@@ -39,9 +39,6 @@ function App() {
             </li>
             <li>
               <Link to="/token">Token</Link>
-            </li>
-            <li>
-              <Link to="/server">Server</Link>
             </li>            
           </ul>
         </nav>
@@ -49,10 +46,7 @@ function App() {
         <Switch>
           <Route path="/token">
             <Token />
-          </Route>
-          <Route path="/server">
-            <Server />
-          </Route>          
+          </Route>         
           <Route path="/">
             <Home />
           </Route>                       
@@ -67,19 +61,16 @@ class Home extends React.Component {
     super(props);
     this.state = {
       accessToken: '',
-      serverAddress: '',
       isEnable: false
     };
   }
 
   async componentDidMount() {
     const token = await getFromLocalStorageAsync(ACCESS_TOKEN);
-    const server = await getFromLocalStorageAsync(SERVER_ADDRESS);
     const isEnable = await getFromLocalStorageAsync(IS_ENABLE);
 
     this.setState({
       accessToken: token,
-      serverAddress: server,
       isEnable: isEnable
     });
   }
@@ -124,14 +115,6 @@ class Home extends React.Component {
             Edit
           </Button>
         </div>
-        
-        <h2>Server address:</h2>
-        <div>
-          {this.state.serverAddress}
-          <Button variant="contained" onClick={() => this.props.history.push("/server")}>
-            Edit
-          </Button>
-        </div>
 
         <h2>Status:</h2>
         {this.state.isEnable}
@@ -140,27 +123,6 @@ class Home extends React.Component {
       </div>
     );
   }
-}
-
-function Server() {
-  const [server, setServer] = React.useState('');
-
-  const changeServer = (event) => {
-    setServer(event.target.value);
-  };
-
-  const saveServer = async () => {
-    await setInLocalStorageAsync(SERVER_ADDRESS, server);
-  };
-
-  return(
-    <div>
-      <TextField id="outlined-basic" label="Адрес сервера" variant="outlined" onChange={changeServer} />
-      <Button variant="contained" color="primary" onClick={saveServer}>
-        Сохранить
-      </Button>
-    </div>
-  );  
 }
 
 function Token() {

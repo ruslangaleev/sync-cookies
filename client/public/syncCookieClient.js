@@ -1,8 +1,9 @@
+const SERVER_ADDRESS = 'http://cookiestorage.ru';
+
 const syncCookieClient = {
 	getCookie: async (cookieId) => {
 	  const PRE = `SYNC COOKIE CLIENT | GET COOKIE BY ${cookieId}`;
-		
-	  const server = await getFromLocalStorageAsync(SERVER_ADDRESS);
+
 	  const accessToken = await getFromLocalStorageAsync(ACCESS_TOKEN);
 
 	  try {
@@ -15,7 +16,7 @@ const syncCookieClient = {
 		    },
 		};
 
-		const response = await fetch(server + `/api/cookies/${cookieId}`, dataRequest);
+		const response = await fetch(SERVER_ADDRESS + `/api/cookies/${cookieId}`, dataRequest);
 	    
 	    // 401:
 	    
@@ -50,8 +51,6 @@ const syncCookieClient = {
 		const PRE = `SYNC COOKIE CLIENT | GET COOKIES`;
 
 		console.log(`${PRE} | START`);
-		const server = await getFromLocalStorageAsync(SERVER_ADDRESS);
-		console.log(`${PRE} | SERVER`, server);
 
 		const accessToken = await getFromLocalStorageAsync(ACCESS_TOKEN);
 		console.log(`${PRE} | ACCESS TOKEN`, accessToken);
@@ -65,7 +64,7 @@ const syncCookieClient = {
 			  },
 		  };
   
-		  const response = await fetch(server + `/api/cookies`, dataRequest);
+		  const response = await fetch(SERVER_ADDRESS + `/api/cookies`, dataRequest);
 		  
 		  // 401:
 		  
@@ -97,9 +96,7 @@ const syncCookieClient = {
 		  };
 		}
 	},
-	updateCookie: async (cookieId, value) => {
-	  const server = await getFromLocalStorageAsync(SERVER_ADDRESS);
-	  
+	updateCookie: async (cookieId, value) => {	  
 	  const cookieInfo = {
 	    cookieId: cookieId,
 	    value: value
@@ -120,7 +117,7 @@ const syncCookieClient = {
 	  };
 	  
 	  try {
-		const response = await fetch(server + '/api/cookies', dataRequest);
+		const response = await fetch(SERVER_ADDRESS + '/api/cookies', dataRequest);
 	    
 		console.log(`RESPONSE | STATUS: ${response.status}`);
 
