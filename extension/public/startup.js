@@ -27,11 +27,10 @@ async function endup() {
 }
 
 async function initialSignalR() {
-	const serverAddress = await getFromLocalStorageAsync(SERVER_ADDRESS);
 	const accessToken = await getFromLocalStorageAsync(ACCESS_TOKEN)
 
 	connection = new signalR.HubConnectionBuilder()
-	    .withUrl(serverAddress + "/hubs/cookie", { accessTokenFactory: () => accessToken }) // с приминением jwt
+	    .withUrl(SERVER_ADDRESS + "/hubs/cookie", { accessTokenFactory: () => accessToken }) // с приминением jwt
 	    .configureLogging(signalR.LogLevel.Information)
 	    .build();
 

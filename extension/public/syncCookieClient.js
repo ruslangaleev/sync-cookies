@@ -1,5 +1,3 @@
-const SERVER_ADDRESS = 'http://cookiestorage.ru';
-
 const syncCookieClient = {
 	getCookie: async (cookieId) => {
 	  const PRE = `SYNC COOKIE CLIENT | GET COOKIE BY ${cookieId}`;
