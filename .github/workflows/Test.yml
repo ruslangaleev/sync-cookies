@@ -62,7 +62,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SERVER_PORT }}
         # Используем sudo потому что дает ошибку PermissionError: [Errno 13] Permission denied: '/home/github/sync-cookies/test/server/postgres/prod/data'
-        script: docker-compose -p test down
+        script: docker-compose -f /home/github/sync-cookies/test/server/docker-compose.yml -f /home/github/sync-cookies/test/server/docker-compose.override.yml -p test down
     - name: Start test containers
       uses: appleboy/ssh-action@master
       with:
