@@ -33,10 +33,12 @@ chrome.cookies.onChanged.addListener(async (changeInfo) => {
 		const key = UPDATE_FROM_SERVER + `_${resource.url}_${cookieName}`;
 		console.log(`COOKIE ON CHANGED | STORAGE KEY: ${key}`);
 		const existCookie = await getFromLocalStorageAsync(key);
-		if (existCookie?.value != cookieValue) {
-			console.log(`UPDATE | COOKIEID: ${cookie.id} | NAME: ${cookieName} | VALUE: ${cookieValue}`);
-			// Обновление произошло со стороны клиента. Необходимо отправить на сервер
-			//const cookieInfoes = await getFromLocalStorageAsync(COOKIE_INFOES);
+		console.log(`COOKIE ON CHANGED | EXIST COOKIE:`, existCookie);
+
+		// existCookie - c сервера
+		// cookieValue - изменения из куков
+		if ((existCookie?.value || cookieValue) && (existCookie?.value != cookieValue)) {
+			console.log(`COOKIE ON CHANGED | COOKIEID: ${cookie.id} | NAME: ${cookieName} | VALUE: ${cookieValue}`);
 			await syncCookieClient.updateCookie(cookie.id, cookieValue);
 		}
 

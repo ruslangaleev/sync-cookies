@@ -20,7 +20,8 @@ namespace SyncCookies.Data
         public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options)
         {
             // Создает базу если она отсутствует
-            Database.EnsureCreated();
+            //Database.EnsureCreated();
+            //Database.Migrate();
         }
     }
 }

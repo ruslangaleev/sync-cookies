@@ -74,7 +74,7 @@ namespace SyncCookies.Api
                     });
 
             services.AddDbContext<ApplicationContext>(options =>
-                options.UseNpgsql(GetConnectionString()));
+                options.UseNpgsql(GetConnectionString())); // , options => options.MigrationsAssembly("SyncCookies.Data")
 
             services.AddSingleton<IConnectionMapping<string>, ConnectionMapping<string>>();
             services.AddScoped<IResourceRepository, ResourceRepository>();
@@ -126,8 +126,10 @@ namespace SyncCookies.Api
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ApplicationContext dataContext)
         {
+            dataContext.Database.Migrate();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

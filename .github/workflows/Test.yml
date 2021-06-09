@@ -54,7 +54,16 @@ jobs:
     needs: [publish]
     runs-on: ubuntu-latest
     steps:
-    - name: Rebuild
+    - name: Stop test containers
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.USER_NAME }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.SERVER_PORT }}
+        # Используем sudo потому что дает ошибку PermissionError: [Errno 13] Permission denied: '/home/github/sync-cookies/test/server/postgres/prod/data'
+        script: docker-compose -f /home/github/sync-cookies/test/server/docker-compose.yml -f /home/github/sync-cookies/test/server/docker-compose.override.yml -p test down
+    - name: Start test containers
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.SERVER_IP }}
