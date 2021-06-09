@@ -30,7 +30,10 @@ async function initialSignalR() {
 	const accessToken = await getFromLocalStorageAsync(ACCESS_TOKEN)
 
 	connection = new signalR.HubConnectionBuilder()
-	    .withUrl(SERVER_ADDRESS + "/hubs/cookie", { accessTokenFactory: () => accessToken }) // с приминением jwt
+	    .withUrl(SERVER_ADDRESS + "/hubs/cookie", { 
+			accessTokenFactory: () => accessToken,
+			transport: signalR.HttpTransportType.WebSockets
+		}) // с приминением jwt
 	    .configureLogging(signalR.LogLevel.Information)
 	    .build();
 
@@ -52,8 +55,11 @@ async function initialSignalR() {
 
 async function initialCookies() {
 	const cookieInfoes = await syncCookieClient.getCookies();
+
+	console.log(`${STARTUP_PRE} COOKIE INFOES`, cookieInfoes);
+
 	await setInLocalStorageAsync(COOKIE_INFOES, cookieInfoes);
-	
+
 	// Все полученные куки обновляем в браузере
 	cookieInfoes.forEach(cookieInfo => {
 		cookieInfo.cookies.forEach(async (cookie) => {

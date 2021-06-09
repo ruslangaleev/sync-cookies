@@ -64,6 +64,8 @@ const syncCookieClient = {
   
 		  const response = await fetch(SERVER_ADDRESS + `/api/cookies`, dataRequest);
 		  
+		  console.log(`${PRE} | RESPONSE STATUS: ${response.status}`);
+
 		  // 401:
 		  
 		  if (response.status == 401) {
@@ -130,7 +132,7 @@ const syncCookieClient = {
 	    // 400:
 	    
 	    const content = await response.json();
-		console.log(`RESPONSE CONTENT | CONTENT: ${content}`);
+		console.log(`RESPONSE CONTENT | CONTENT:`, content);
 	    
 	    if (response.status == 400) {      
 	      return {
