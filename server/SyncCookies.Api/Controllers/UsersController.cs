@@ -59,5 +59,23 @@ namespace SyncCookies.Api.Controllers
             });
         }
 
+        [HttpDelete("{userId}")]
+        public async Task<IActionResult> DeleteAsync(Guid userId)
+        {
+            if (Guid.Empty == userId)
+            {
+                return BadRequest("Идентификатор пользователя не указан");
+            }
+
+            var user = await _userRepo.GetAsync(userId);
+            if (user == null)
+            {
+                return BadRequest("Указанный пользователь не найден");
+            }
+
+            await _userRepo.RemoveAsync(userId);
+
+            return Ok("Пользователь успешно удален");
+        }
     }
 }

@@ -11,7 +11,7 @@ namespace SyncCookies.Data.Repositories
     public interface IClientRepository
     {
         Task<Page<Client>> GetByResourceAsync(Guid resourceId);
-        Task<Client> GetByClientAsync(Guid clientId);
+        Task<Client> GetByClientAsync(Guid clientId, bool include = false);
         Task<Page<Client>> GetByUserAsync(Guid userId);
         Task CreateClientAsync(Client client);
         Task CreateChannelAsync(Channel channel);
@@ -41,9 +41,16 @@ namespace SyncCookies.Data.Repositories
             await _context.Clients.AddAsync(client);
         }
 
-        public async Task<Client> GetByClientAsync(Guid clientId)
+        public async Task<Client> GetByClientAsync(Guid clientId, bool include = false)
         {
-            return await _context.Clients.FindAsync(clientId);
+            if (include)
+            {
+                return await _context.Clients.Include(t => t.Cookies).ThenInclude(t => t.CookieTemplate).SingleOrDefaultAsync(t => t.Id == clientId);
+            }
+            else
+            {
+                return await _context.Clients.FindAsync(clientId);
+            }
         }
 
         public async Task<Page<Client>> GetByResourceAsync(Guid resourceId)

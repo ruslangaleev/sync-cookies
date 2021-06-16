@@ -74,6 +74,7 @@ namespace SyncCookies.Api.Controllers
             }
 
             await _resourceRepo.RemoveAsync(resource);
+            await _resourceRepo.SaveChangesAsync();
 
             return Ok("Успешно удалено");
         }

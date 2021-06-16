@@ -4,9 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using SyncCookies.Api.Dtos.CookieTemplates;
 using SyncCookies.Data.Repositories;
 using SyncCookies.Models;
+using SyncCookies.Services;
+using SyncCookies.Services.Hubs;
 
 namespace SyncCookies.Api.Controllers
 {
@@ -17,12 +20,17 @@ namespace SyncCookies.Api.Controllers
         private readonly ICookieTemplateRepository _cookieTemplateRepo;
         private readonly IClientRepository _clientRepo;
         private readonly ICookieRepository _cookieRepo;
+        private readonly IHubContext<CookieHub> _cookieHub;
+        private readonly IConnectionMapping<string> _connectionMapping;
 
-        public CookieTemplatesController(ICookieTemplateRepository cookieTemplateRepo, IClientRepository clientRepo, ICookieRepository cookieRepo)
+        public CookieTemplatesController(ICookieTemplateRepository cookieTemplateRepo, IClientRepository clientRepo, ICookieRepository cookieRepo,
+            IHubContext<CookieHub> cookieHub, IConnectionMapping<string> connectionMapping)
         {
             _cookieTemplateRepo = cookieTemplateRepo;
             _clientRepo = clientRepo;
             _cookieRepo = cookieRepo;
+            _cookieHub = cookieHub;
+            _connectionMapping = connectionMapping;
         }
 
         [HttpGet("{resourceId}")]
@@ -58,6 +66,16 @@ namespace SyncCookies.Api.Controllers
             await _cookieRepo.SaveChangesAsync();
 
             // TODO: Уведомлять всех пользователей что теперь по такому что куку нужно отправлять значение
+            //var users = 
+
+            //var connection = _connectionMapping.GetConnections(user.Email);
+            //await _cookieHub.Clients.AllExcept(new string[] { connection.SingleOrDefault() }).SendAsync("NewCookie", new 
+            //{ 
+            //    id = cookie.Id,
+            //    value = cookie.Value,
+            //    name = template.Name,
+            //    url = resource.Url
+            //});
 
             return Ok(cookieTemplate);
         }
@@ -73,6 +91,7 @@ namespace SyncCookies.Api.Controllers
             }
 
             _cookieTemplateRepo.Remove(template);
+            await _cookieTemplateRepo.SaveChangesAsync();
 
             // TODO: Уведомлять всех пользователей что теперь по такому что куку не нужно отправлять значение
 
