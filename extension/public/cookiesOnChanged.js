@@ -13,6 +13,8 @@ chrome.cookies.onChanged.addListener(async (changeInfo) => {
 		return;
 	}
 
+	//console.log('DEBUG | COOKIEINFOES', cookieInfoes);
+
 	// По какому домену пришли куки?
 	const resource = cookieInfoes.find(info => info.url.indexOf(cookieDomain) > -1);
 	if (!resource) {

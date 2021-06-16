@@ -6,10 +6,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using SyncCookies.Api.Dtos.Clients;
 using SyncCookies.Api.Dtos.Cookies;
 using SyncCookies.Data.Repositories;
 using SyncCookies.Models;
+using SyncCookies.Services;
+using SyncCookies.Services.Hubs;
 
 namespace SyncCookies.Api.Controllers
 {
@@ -23,15 +26,19 @@ namespace SyncCookies.Api.Controllers
         private readonly IUserRepository _userRepo;
         private readonly ICookieRepository _cookieRepo;
         private readonly ICookieTemplateRepository _cookieTemplateRepo;
+        private readonly IConnectionMapping<string> _connectionMapping;
+        private readonly IHubContext<CookieHub> _cookieHub;
 
         public ClientsController(IClientRepository clientRepo, IResourceRepository resourceRepo, IUserRepository userRepo, ICookieRepository cookieRepo,
-            ICookieTemplateRepository cookieTemplateRepo)
+            ICookieTemplateRepository cookieTemplateRepo, IConnectionMapping<string> connectionMapping, IHubContext<CookieHub> cookieHub)
         {
             _clientRepo = clientRepo;
             _resourceRepo = resourceRepo;
             _userRepo = userRepo;
             _cookieRepo = cookieRepo;
             _cookieTemplateRepo = cookieTemplateRepo;
+            _connectionMapping = connectionMapping;
+            _cookieHub = cookieHub;
         }
 
         [HttpGet("{resourceId}")]
@@ -46,23 +53,28 @@ namespace SyncCookies.Api.Controllers
         public async Task<IActionResult> GetByClientAsync(Guid clientId)
         {
             var client = await _clientRepo.GetByClientAsync(clientId);
-            var cookies = await _cookieRepo.GetByClientIdAsync(clientId);
+            var cookieIds = await _cookieRepo.GetByClientIdAsync(clientId);
+            var users = await _userRepo.GetByClientIdAsync(clientId);
+
+            var cookies = new List<object>();
+            foreach (var item in cookieIds.Data)
+            {
+                var cookieTemplate = await _cookieTemplateRepo.GetByTemplateAsync(item.CookieTemplateId);
+
+                cookies.Add(new
+                {
+                    id = item.Id,
+                    value = item.Value,
+                    name = cookieTemplate.Name
+                });
+            }
 
             return Ok(new
             {
                 id = client.Id,
                 name = client.Name,
-                cookies = cookies.Data.Select(async t =>
-                {
-                    var cookieName = await _cookieTemplateRepo.GetByTemplateAsync(t.CookieTemplateId);
-
-                    return new
-                    {
-                        id = t.Id,
-                        value = t.Value,
-                        name = cookieName.Name
-                    };
-                })
+                cookies = cookies,
+                users = users
             });
         }
 
@@ -124,7 +136,7 @@ namespace SyncCookies.Api.Controllers
         [HttpPost("{clientId}/users/{userId}")]
         public async Task<IActionResult> AddUserAsync(Guid clientId, Guid userId)
         {
-            var client = await _clientRepo.GetByClientAsync(clientId);
+            var client = await _clientRepo.GetByClientAsync(clientId, include: true);
             if (client == null)
             {
                 return BadRequest("Клиент не найден");
@@ -136,12 +148,34 @@ namespace SyncCookies.Api.Controllers
                 return BadRequest("Пользователь не найден");
             }
 
+            var resource = await _resourceRepo.GetAsync(client.ResourceId, true);
+
             await _clientRepo.CreateChannelAsync(new Channel
             {
                 ClientId = clientId,
                 UserId = userId
             });
             await _clientRepo.SaveChangesAsync();
+
+            // Оповещаем данного клиента, что у него новый источник
+            var connection = _connectionMapping.GetConnections(user.Email);
+            await _cookieHub.Clients.AllExcept(new string[] { connection.SingleOrDefault() }).SendAsync("NewResource", new 
+            {
+                ResourceId = resource.Id,
+                Url = resource.Url,
+                ClientId = client.Id,
+                Name = client.Name,
+                Cookies = client.Cookies.Select(p =>
+                {
+                    return new
+                    {
+                        Id = p.Id,
+                        Name = p.CookieTemplate.Name,
+                        Value = p.Value,
+                        Domain = p.CookieTemplate.Domain
+                    };
+                })
+            });
 
             return Ok("Подписка успешно создана");
         }
@@ -156,6 +190,7 @@ namespace SyncCookies.Api.Controllers
             }
 
             await _clientRepo.RemoveAsync(client);
+            await _clientRepo.SaveChangesAsync();
 
             return Ok();
         }

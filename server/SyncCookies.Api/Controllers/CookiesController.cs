@@ -50,6 +50,13 @@ namespace SyncCookies.Api.Controllers
             var emailClaim = User.Claims.Where(t => t.Type == ClaimsIdentity.DefaultNameClaimType).Single();
             var user = await _userRepo.GetAsync(emailClaim.Value);
 
+            if (user == null)
+            {
+                return BadRequest(new {
+                    errorMessage = "Текущий пользователь не найден"
+                });
+            }
+
             var clients = await _clientRepo.GetByUserAsync(user.Id);
 
             var result = clients.Data.Select(t => 
@@ -60,7 +67,7 @@ namespace SyncCookies.Api.Controllers
                     Url = t.Resource.Url,
                     ClientId = t.Id,
                     Name = t.Name,
-                    Cookies = t.Cookies.Select(p => 
+                    Cookies = t.Cookies.Select(p =>
                     {
                         return new
                         {
