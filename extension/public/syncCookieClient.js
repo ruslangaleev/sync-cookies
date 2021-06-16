@@ -80,18 +80,26 @@ const syncCookieClient = {
 
 		  console.log(`${PRE} | CONTENT JSON`, content);
 		  
-		  if (response.status == 400) {      
+		  if (response.status == 400) {
 			return {
-			  errorMessage: content.errorMessage,
-			  accessToken: content.access_token
+			  success: false,
+			  serverError: true,
+			  errorMessage: content.errorMessage
 			};
 		  }
 		  
 		  // 200:
 		  
-		  return content;
+		  return {
+			success: true,
+			content: content
+		  };
 		} catch (error) {
+			console.log(`${PRE} | REQUEST ERROR`);
+
 			return {
+			  success: false,
+			  serverError: false,
 			  errorMessage: 'Ошибка отправления запроса. Либо сервер недоступен, либо запрос составлен неверно'
 		  };
 		}
