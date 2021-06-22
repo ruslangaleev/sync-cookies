@@ -74,7 +74,8 @@ namespace SyncCookies.Api.Controllers
                             Id = p.Id,
                             Name = p.CookieTemplate.Name,
                             Value = p.Value,
-                            Domain = p.CookieTemplate.Domain
+                            Domain = p.CookieTemplate.Domain,
+                            ExpirationDate = p.ExpirationDate
                         };
                     })
                 };
@@ -124,10 +125,15 @@ namespace SyncCookies.Api.Controllers
 
             if (cookie.Value == newCookie.Value)
             {
-                return BadRequest();
+                return BadRequest(new {
+                    cookieId = newCookie.CookieId,
+                    value = newCookie.Value,
+                    errorMessage = "Дублируемое значение"
+                });
             }
 
             cookie.Value = newCookie.Value;
+            cookie.ExpirationDate = newCookie.ExpirationDate;
 
             _cookieRepo.UpdateCookie(cookie);
             await _cookieRepo.SaveChangesAsync();
@@ -140,11 +146,29 @@ namespace SyncCookies.Api.Controllers
             { 
                 id = cookie.Id,
                 value = cookie.Value,
+                expirationDate = cookie.ExpirationDate,
                 name = template.Name,
                 url = resource.Url
             });
 
             return Ok("Куки обновлены");
+        }
+
+        [HttpDelete("clear")]
+        public async Task<IActionResult> ClearAllAsync(Guid clientId)
+        {
+            var cookies = await _cookieRepo.GetByClientIdAsync(clientId);
+
+            foreach (var cookie in cookies.Data)
+            {
+                cookie.ExpirationDate = 0;
+                cookie.Value = "";
+                _cookieRepo.UpdateCookie(cookie);
+            }
+
+            await _cookieRepo.SaveChangesAsync();
+
+            return Ok("Успешно очищены");
         }
     }
 }

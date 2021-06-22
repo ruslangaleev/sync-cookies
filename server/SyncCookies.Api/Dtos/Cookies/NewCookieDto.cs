@@ -9,5 +9,7 @@ namespace SyncCookies.Api.Dtos.Cookies
 
         [Required(ErrorMessage = "Ноебходимо указать значение кука")]
         public string Value { get; set; }
+
+        public float ExpirationDate { get; set; }
     }
 }

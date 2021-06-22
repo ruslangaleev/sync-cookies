@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SyncCookies.Data;
@@ -9,9 +10,10 @@ using SyncCookies.Data;
 namespace SyncCookies.Data.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20210621102659_DeleteExpirationDate")]
+    partial class DeleteExpirationDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -85,9 +87,6 @@ namespace SyncCookies.Data.Migrations
 
                     b.Property<DateTime>("CreateAt")
                         .HasColumnType("timestamp without time zone");
-
-                    b.Property<float>("ExpirationDate")
-                        .HasColumnType("real");
 
                     b.Property<DateTime>("UpdateAt")
                         .HasColumnType("timestamp without time zone");

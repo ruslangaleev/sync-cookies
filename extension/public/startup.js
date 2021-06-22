@@ -114,7 +114,8 @@ async function initialSignalR() {
 				url: newResource.url,
 				name: cookie.name,
 				value: cookie.value,
-				domain: cookie.domain
+				domain: cookie.domain,
+				expirationDate: cookie.expirationDate
 			});
 		});
 		console.log(`NEW RESOURCE | RESOURCE_ID: ${newResource.resourceId} | END`, newResource);
@@ -149,20 +150,27 @@ async function initialCookies() {
 		cookieInfo.cookies.forEach(async (cookie) => {
 			const key = UPDATE_FROM_SERVER + `_${cookieInfo.url}_${cookie.name}`;
 			await setInLocalStorageAsync(key, cookie);
-			await setCookie({
-				url: cookieInfo.url,
-				name: cookie.name,
-				value: cookie.value,
-				domain: cookie.domain
-			});
+			if (!cookie.value) {
+				await setCookie({
+					url: cookieInfo.url,
+					name: cookie.name,
+					value: cookie.value,
+					domain: cookie.domain,
+					expirationDate: cookie.expirationDate
+				});
+			}
 		});
 	});
 
 	console.log(`${STARTUP_PRE} | INITIAL COOKIES | END`);
 }
 
+let signalRTimerId;
+
 async function startSignalR() {
 	try {
+		clearTimeout(signalRTimerId);
+
 		console.log(`${STARTUP_PRE} | START SIGNALR | TRY SIGNALR CONNECT`);
 		// Если при подключении выбрасывает exception и после переключении флага на DISABLE
 		const isEnable = await getFromLocalStorageAsync(IS_ENABLE);
@@ -175,7 +183,7 @@ async function startSignalR() {
 	} catch {
 		// Если связь оборвется, можно упустить какую то куку. И при успешном подключении, нужно снова тянуть список, возможно есть новые обновления
 		console.log(`${STARTUP_PRE} | START SIGNALR | SIGNALR ERROR CONNECT`);
-		setTimeout(reconnect, 5000);
+		signalRTimerId = setTimeout(reconnect, 5000);
 	}
 }
 

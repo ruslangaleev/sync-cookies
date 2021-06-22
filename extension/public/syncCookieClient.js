@@ -104,10 +104,11 @@ const syncCookieClient = {
 		  };
 		}
 	},
-	updateCookie: async (cookieId, value) => {	  
+	updateCookie: async (cookieId, value, expirationDate) => {	  
 	  const cookieInfo = {
 	    cookieId: cookieId,
-	    value: value
+	    value: value,
+		expirationDate: expirationDate
 	  }
 
 	  console.log(`TRY SEND | COOKIEID: ${cookieId} | VALUE: ${value}`);
