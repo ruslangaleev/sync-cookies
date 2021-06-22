@@ -77,13 +77,14 @@ class Home extends React.Component {
 
   async enableSync() {
     await setInLocalStorageAsync(IS_ENABLE, true);
-    chrome.extension.getBackgroundPage().startup();
+    await chrome.extension.getBackgroundPage().initial();
+    await chrome.extension.getBackgroundPage().connect();
     this.setState({ isEnable: true });
   }
 
   async disableSync() {
     await setInLocalStorageAsync(IS_ENABLE, false);
-    chrome.extension.getBackgroundPage().endup();
+    await chrome.extension.getBackgroundPage().disconnect();
     this.setState({ isEnable: false });
   }
 

@@ -18,6 +18,8 @@ namespace SyncCookies.Data.Repositories
 
         Task CreateRangeCookieAsync(Cookie[] cookies);
 
+        void Remove(Cookie cookie);
+
         // TODO: Временно здесь
         Task SaveChangesAsync();
     }
@@ -57,6 +59,11 @@ namespace SyncCookies.Data.Repositories
         public async Task<Cookie> GetByCookieIdAsync(Guid cookieId)
         {
             return await _context.ActualCookies.FindAsync(cookieId);
+        }
+
+        public void Remove(Cookie cookie)
+        {
+            _context.ActualCookies.Remove(cookie);
         }
 
         public async Task SaveChangesAsync()

@@ -24,7 +24,11 @@ namespace SyncCookies.Services.Hubs
             var connectionId = Context.ConnectionId;
             var email = Context.User.Identity.Name;
 
-            _connectionMapping.Add(email, connectionId);
+            // TODO: условие нужно потому что еще нет авторизации по сокетам
+            if (!string.IsNullOrEmpty(email))
+            {
+                _connectionMapping.Add(email, connectionId);
+            }
 
             return base.OnConnectedAsync();
         }
@@ -34,7 +38,11 @@ namespace SyncCookies.Services.Hubs
             var connectionId = Context.ConnectionId;
             var email = Context.User.Identity.Name;
 
-            _connectionMapping.Remove(email, connectionId);
+            // TODO: условие нужно потому что еще нет авторизации по сокетам
+            if (!string.IsNullOrEmpty(email))
+            {
+                _connectionMapping.Remove(email, connectionId);
+            }
 
             return base.OnDisconnectedAsync(exception); 
         }

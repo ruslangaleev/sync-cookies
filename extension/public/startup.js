@@ -1,32 +1,86 @@
 let connection;
 
-async function startup() {
-	// После установки расширения, необходимо проверять, запушена ли синхронизация
-	const isEnable = await getFromLocalStorageAsync(IS_ENABLE);
-	if (!isEnable) {
+// Инициализация.
+async function initial() {
+	// Прерываем если после установки расширения запущена синхронизация
+	if (!await isSyncStarted()) {
 		return;
 	}
 
-	console.log(`${STARTUP_PRE} START CONFIG`);
+	console.log(`${STARTUP_PRE} | INITIAL | START`);
+
+	// обнуляем переменные
+	await setInLocalStorageAsync(COOKIE_INFOES, null);
+	// TODO: КАК ПОДЧИСТИТЬ ОСТАЛЬНЫЕ ПЕРЕМЕННЫЕ?
 
 	await initialSignalR();
-	await initialCookies();
 
-	console.log(`${STARTUP_PRE} END CONFIG`);
+	console.log(`${STARTUP_PRE} | INITIAL | END`);
 }
 
-async function endup() {
+// Подключение к серверу.
+async function connect() {
+	console.log(`${STARTUP_PRE} | CONNECT | START`);
+
+	// инициалируются куки в хранилище
+	await initialCookies();
+
+	// подключение по сокетам
+	await startSignalR();
+
+	console.log(`${STARTUP_PRE} | CONNECT | END`);
+}
+
+// Когда signalR теряет соединение, есть вероятность потерять любые данные. Повторное подключение к серверу.
+async function reconnect() {
+	console.log(`${STARTUP_PRE} | RECONNECT | START`);
+
+	// Прерываем если во время неудачных подключений отключили синхронизацию
+	if (!await isSyncStarted()) {
+		return;
+	}
+
+	// инициалируются куки в хранилище
+	await initialCookies();
+
+	await startSignalR();
+
+	console.log(`${STARTUP_PRE} | RECONNECT | END`);
+}
+
+async function disconnect() {
+	// Прерываем если синхронизация итак была отключена
+	if (!await isSyncStarted()) {
+		return;
+	}
+	
+	await stopConnectSignalR();
+
+	await setInLocalStorageAsync(COOKIE_INFOES, null);
+}
+
+async function stopConnectSignalR() {
 	try {
-		console.log(`${STARTUP_PRE} SIGNALR TRY DISCONNECT`);
+		console.log(`${STARTUP_PRE}/STOPCONNECTSIGNALR | TRY DISCONNECT`);
 		await connection.stop();
-		console.log(`${STARTUP_PRE} SIGNALR DISCONNECTED`);
+		console.log(`${STARTUP_PRE}/STOPCONNECTSIGNALR | DISCONNECTED`);
 	} catch {
-		console.log(`${STARTUP_PRE} SIGNALR ERROR DISCONNECT`);
-		setTimeout(startSignalR, 5000);
+		console.log(`${STARTUP_PRE}/STOPCONNECTSIGNALR | ERROR DISCONNECT`);
+		setTimeout(stopConnection, 5000);
 	}
 }
 
+// Запущена ли синхронизация.
+async function isSyncStarted() {
+	return await getFromLocalStorageAsync(IS_ENABLE);
+}
+
+// После инициализации выполняется подключение.
+initial().then(_ => connect());
+
 async function initialSignalR() {
+	console.log(`${STARTUP_PRE} | INITIAL SIGNALR | START`);
+
 	const accessToken = await getFromLocalStorageAsync(ACCESS_TOKEN)
 
 	connection = new signalR.HubConnectionBuilder()
@@ -46,55 +100,92 @@ async function initialSignalR() {
 		await setCookie(cookie);
 	});
 
-	connection.onclose(startSignalR);
+	connection.on('NewResource', async (newResource) => {
+		console.log(`NEW RESOURCE | RESOURCE_ID: ${newResource.resourceId} | START`, newResource);
 
-	console.log(`${STARTUP_PRE} SIGNALR CONFIG DONE`);
+		const cookieInfoes = await getFromLocalStorageAsync(COOKIE_INFOES);
+		cookieInfoes.push(newResource);
+		await setInLocalStorageAsync(COOKIE_INFOES, cookieInfoes);
 
-	await startSignalR();
+		newResource.cookies.forEach(async (cookie) => {
+			const key = UPDATE_FROM_SERVER + `_${newResource.url}_${cookie.name}`;
+			await setInLocalStorageAsync(key, cookie);
+			await setCookie({
+				url: newResource.url,
+				name: cookie.name,
+				value: cookie.value,
+				domain: cookie.domain,
+				expirationDate: cookie.expirationDate
+			});
+		});
+		console.log(`NEW RESOURCE | RESOURCE_ID: ${newResource.resourceId} | END`, newResource);
+	});
+
+	// TOOD: Если отключили подписку
+
+	connection.onclose(reconnect);
+
+	console.log(`${STARTUP_PRE} | INITIAL SIGNALR | END`);
 }
 
 async function initialCookies() {
-	const cookieInfoes = await syncCookieClient.getCookies();
+	// ошибки бывают серверные, из за которых прерываем.
+	// Ошибки бывают в подключениях, из за которых мы пытаемся снова подключиться
+	console.log(`${STARTUP_PRE} | INITIAL COOKIES | START`);
 
-	console.log(`${STARTUP_PRE} COOKIE INFOES`, cookieInfoes);
+	const result = await syncCookieClient.getCookies();
 
-	await setInLocalStorageAsync(COOKIE_INFOES, cookieInfoes);
+	console.log(`${STARTUP_PRE} | INITIAL COOKIES | COOKIE INFOES`, result);
+
+	if (!result.success) {
+		if (!result.serverError) {
+			return;
+		}
+	}
+
+	await setInLocalStorageAsync(COOKIE_INFOES, result.content);
 
 	// Все полученные куки обновляем в браузере
-	cookieInfoes.forEach(cookieInfo => {
+	result.content.forEach(cookieInfo => {
 		cookieInfo.cookies.forEach(async (cookie) => {
 			const key = UPDATE_FROM_SERVER + `_${cookieInfo.url}_${cookie.name}`;
 			await setInLocalStorageAsync(key, cookie);
-			await setCookie({
-				url: cookieInfo.url,
-				name: cookie.name,
-				value: cookie.value,
-				domain: cookie.domain
-			});
+			if (!cookie.value) {
+				await setCookie({
+					url: cookieInfo.url,
+					name: cookie.name,
+					value: cookie.value,
+					domain: cookie.domain,
+					expirationDate: cookie.expirationDate
+				});
+			}
 		});
 	});
 
-	console.log('STARTUP | INITIAL COOKIE INFOES DONE', cookieInfoes);
+	console.log(`${STARTUP_PRE} | INITIAL COOKIES | END`);
 }
+
+let signalRTimerId;
 
 async function startSignalR() {
 	try {
+		clearTimeout(signalRTimerId);
+
+		console.log(`${STARTUP_PRE} | START SIGNALR | TRY SIGNALR CONNECT`);
 		// Если при подключении выбрасывает exception и после переключении флага на DISABLE
 		const isEnable = await getFromLocalStorageAsync(IS_ENABLE);
 		if (!isEnable) {
 			return;
-		}		
+		}
 
-		console.log(`${STARTUP_PRE} TRY SIGNALR CONNECT`);
 		await connection.start();
-		console.log(`${STARTUP_PRE} SIGNALR CONNECTED`);
+		console.log(`${STARTUP_PRE} | START SIGNALR | SIGNALR CONNECTED`);
 	} catch {
-		console.log(`${STARTUP_PRE} SIGNALR ERROR CONNECT`);
-		setTimeout(startSignalR, 5000);
+		// Если связь оборвется, можно упустить какую то куку. И при успешном подключении, нужно снова тянуть список, возможно есть новые обновления
+		console.log(`${STARTUP_PRE} | START SIGNALR | SIGNALR ERROR CONNECT`);
+		signalRTimerId = setTimeout(reconnect, 5000);
 	}
 }
-
-startup();
 
 async function setInLocalStorageAsync(key, value) {
 	return await new Promise((resolve, reject) => {
