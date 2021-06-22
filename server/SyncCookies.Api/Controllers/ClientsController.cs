@@ -148,6 +148,12 @@ namespace SyncCookies.Api.Controllers
                 return BadRequest("Пользователь не найден");
             }
 
+            var exist = await _clientRepo.ExistsUserInClientAsync(clientId, userId);
+            if (exist)
+            {
+                return BadRequest("Пользователь уже подписан под данную учетку");
+            }
+
             var resource = await _resourceRepo.GetAsync(client.ResourceId, true);
 
             await _clientRepo.CreateChannelAsync(new Channel
