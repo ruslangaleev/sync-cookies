@@ -11,6 +11,6 @@ namespace SyncCookies.Api.Dtos.Cookies
 
         public string Value { get; set; }
 
-        public float ExpirationDate { get; set; }
+        public float? ExpirationDate { get; set; }
     }
 }
