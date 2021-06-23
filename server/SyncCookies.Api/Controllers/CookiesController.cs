@@ -172,5 +172,29 @@ namespace SyncCookies.Api.Controllers
 
             return Ok("Успешно очищены");
         }
+
+        [HttpPut("{cookieId}")]
+        public async Task<IActionResult> UpdateCookieAsync(Guid cookieId, CookieDto cookieDto)
+        {
+            var cookie = await _cookieRepo.GetByCookieIdAsync(cookieId);
+            if (cookie == null)
+            {
+                return NotFound();
+            }
+
+            cookie.Value = cookieDto.Value;
+            cookie.ExpirationDate = cookieDto.ExpirationDate;
+
+            _cookieRepo.UpdateCookie(cookie);
+            await _cookieRepo.SaveChangesAsync();
+
+            return Ok();
+        }
+    }
+
+    public class CookieDto
+    {
+        public string Value { get; set; }
+        public float ExpirationDate { get; set; }
     }
 }
