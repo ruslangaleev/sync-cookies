@@ -53,6 +53,11 @@ namespace SyncCookies.Api.Controllers
         public async Task<IActionResult> GetByClientAsync(Guid clientId)
         {
             var client = await _clientRepo.GetByClientAsync(clientId);
+            if (client == null)
+            {
+                return NotFound();
+            }
+
             var cookieIds = await _cookieRepo.GetByClientIdAsync(clientId);
             var users = await _userRepo.GetByClientIdAsync(clientId);
 
@@ -65,7 +70,8 @@ namespace SyncCookies.Api.Controllers
                 {
                     Id = item.Id,
                     value = item.Value,
-                    name = cookieTemplate.Name
+                    name = cookieTemplate.Name,
+                    expirationDate = item.ExpirationDate
                 });
             }
 
