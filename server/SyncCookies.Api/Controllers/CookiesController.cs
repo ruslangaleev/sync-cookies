@@ -105,37 +105,31 @@ namespace SyncCookies.Api.Controllers
             });
         }
 
-        [HttpPost]
-        public async Task<IActionResult> UpdateCookie(NewCookieDto newCookie)
+        [HttpPut("{cookieId}")]
+        public async Task<IActionResult> UpdateCookie(Guid cookieId, UpdateCookieDto cookieDto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new {
-                    errorMessage = "Невалидные данные"
-                });
-            }
-
             var emailClaim = User.Claims.Where(t => t.Type == ClaimsIdentity.DefaultNameClaimType).Single();
             var user = await _userRepo.GetAsync(emailClaim.Value);
 
-            var cookie = await _cookieRepo.GetByCookieIdAsync(newCookie.CookieId);
+            var cookie = await _cookieRepo.GetByCookieIdAsync(cookieId);
 
             if (cookie == null)
             {
                 return NotFound();
             }
 
-            if (cookie.Value == newCookie.Value)
+            if (cookie.Value == cookieDto.Value && cookie.ExpirationDate == cookieDto.ExpirationDate)
             {
                 return BadRequest(new {
-                    cookieId = newCookie.CookieId,
-                    value = newCookie.Value,
+                    cookieId = cookieId,
+                    value = cookieDto.Value,
+                    expirationDate = cookieDto.ExpirationDate,
                     errorMessage = "Дублируемое значение"
                 });
             }
 
-            cookie.Value = newCookie.Value;
-            cookie.ExpirationDate = newCookie.ExpirationDate;
+            cookie.Value = cookieDto.Value;
+            cookie.ExpirationDate = cookieDto.ExpirationDate;
 
             _cookieRepo.UpdateCookie(cookie);
             await _cookieRepo.SaveChangesAsync();
@@ -172,29 +166,5 @@ namespace SyncCookies.Api.Controllers
 
             return Ok("Успешно очищены");
         }
-
-        [HttpPut("{cookieId}")]
-        public async Task<IActionResult> UpdateCookieAsync(Guid cookieId, CookieDto cookieDto)
-        {
-            var cookie = await _cookieRepo.GetByCookieIdAsync(cookieId);
-            if (cookie == null)
-            {
-                return NotFound();
-            }
-
-            cookie.Value = cookieDto.Value;
-            cookie.ExpirationDate = cookieDto.ExpirationDate;
-
-            _cookieRepo.UpdateCookie(cookie);
-            await _cookieRepo.SaveChangesAsync();
-
-            return Ok();
-        }
-    }
-
-    public class CookieDto
-    {
-        public string Value { get; set; }
-        public float ExpirationDate { get; set; }
     }
 }

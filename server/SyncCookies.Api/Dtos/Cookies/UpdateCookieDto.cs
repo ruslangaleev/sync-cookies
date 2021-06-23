@@ -5,8 +5,7 @@ using System.Threading.Tasks;
 
 namespace SyncCookies.Api.Dtos.Cookies
 {
-    public class CookieDto : BaseCookieDto
+    public class UpdateCookieDto : BaseCookieDto
     {
-        public Guid Id { get; set; }
     }
 }
