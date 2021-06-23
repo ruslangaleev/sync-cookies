@@ -110,7 +110,9 @@ namespace SyncCookies.Api.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest("Невалидные данные");
+                return BadRequest(new {
+                    errorMessage = "Невалидные данные"
+                });
             }
 
             var emailClaim = User.Claims.Where(t => t.Type == ClaimsIdentity.DefaultNameClaimType).Single();

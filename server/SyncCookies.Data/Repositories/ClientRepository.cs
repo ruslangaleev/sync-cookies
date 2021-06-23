@@ -14,10 +14,12 @@ namespace SyncCookies.Data.Repositories
         Task<Client> GetByClientAsync(Guid clientId, bool include = false);
         Task<Page<Client>> GetByUserAsync(Guid userId);
         Task CreateClientAsync(Client client);
-        Task CreateChannelAsync(Channel channel);
-        Task<bool> ExistsUserInClientAsync(Guid clientId, Guid userId);
         Task RemoveAsync(Client client);
         Task SaveChangesAsync();
+
+        Task CreateChannelAsync(Channel channel);
+        Task<Channel> GetChannelAsync(Guid clientId, Guid userId);
+        void RemoveChannel(Channel channel);
     }
 
     public class ClientRepository : IClientRepository
@@ -100,9 +102,19 @@ namespace SyncCookies.Data.Repositories
             };
         }
 
+        public async Task<Channel> GetChannelAsync(Guid clientId, Guid userId)
+        {
+            return await _context.Channels.Where(t => t.ClientId == clientId && t.UserId == userId).SingleOrDefaultAsync();
+        }
+
         public async Task RemoveAsync(Client client)
         {
             _context.Clients.Remove(client);
+        }
+
+        public void RemoveChannel(Channel channel)
+        {
+            _context.Channels.Remove(channel);
         }
 
         public async Task SaveChangesAsync()
