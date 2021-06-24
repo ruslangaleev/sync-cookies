@@ -8,5 +8,7 @@ namespace SyncCookies.Api.Dtos.Cookies
     public class CookieDto : BaseCookieDto
     {
         public Guid Id { get; set; }
+
+        public string Name { get; set; }
     }
 }
