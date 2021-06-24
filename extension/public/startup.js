@@ -1,4 +1,6 @@
 let connection;
+const NOTIFY = 'Notify';
+const STARTUP_PRE = 'Startup';
 
 // Инициализация.
 async function initial() {
@@ -92,10 +94,8 @@ async function initialSignalR() {
 	    .build();
 
 	connection.on('NewCookie', async (cookie) => {
-		console.log(`NEW COOKIE | ID: ${cookie.id} | NAME: ${cookie.name} | VALUE: ${cookie.value} | URL: ${cookie.url}`);
-
+		console.log(`NewCookie`, cookie);
 		const key = UPDATE_FROM_SERVER + `_${cookie.url}_${cookie.name}`;
-		console.log(`RECEIVE COOKIE | STORAGE KEY: ${key}`);
 		await setInLocalStorageAsync(key, cookie);
 		await setCookie(cookie);
 	});
@@ -121,6 +121,13 @@ async function initialSignalR() {
 		console.log(`NEW RESOURCE | RESOURCE_ID: ${newResource.resourceId} | END`, newResource);
 	});
 
+	connection.on('RemoveChannel', async (notify) => {
+		const cookieInfoes = await getFromLocalStorageAsync(COOKIE_INFOES);
+		if (!cookieInfoes) {
+			return;
+		}
+	});
+
 	// TOOD: Если отключили подписку
 
 	connection.onclose(reconnect);
@@ -129,18 +136,16 @@ async function initialSignalR() {
 }
 
 async function initialCookies() {
-	// ошибки бывают серверные, из за которых прерываем.
-	// Ошибки бывают в подключениях, из за которых мы пытаемся снова подключиться
-	console.log(`${STARTUP_PRE} | INITIAL COOKIES | START`);
+	console.log(`${STARTUP_PRE} > initialCookies`);
 
 	const result = await syncCookieClient.getCookies();
+	// if (result.status == 500) {
+	// 	setTimeout(initialCookies, 5000);
+	// }
 
-	console.log(`${STARTUP_PRE} | INITIAL COOKIES | COOKIE INFOES`, result);
-
-	if (!result.success) {
-		if (!result.serverError) {
-			return;
-		}
+	if (result.status != 200) {
+		console.log(`${STARTUP_PRE} > initialCookies > response status: ${result.status}, error message: `, result.errorMessage);
+		return;
 	}
 
 	await setInLocalStorageAsync(COOKIE_INFOES, result.content);
@@ -150,7 +155,7 @@ async function initialCookies() {
 		cookieInfo.cookies.forEach(async (cookie) => {
 			const key = UPDATE_FROM_SERVER + `_${cookieInfo.url}_${cookie.name}`;
 			await setInLocalStorageAsync(key, cookie);
-			if (!cookie.value) {
+			if (cookie.value) {
 				await setCookie({
 					url: cookieInfo.url,
 					name: cookie.name,
@@ -158,11 +163,11 @@ async function initialCookies() {
 					domain: cookie.domain,
 					expirationDate: cookie.expirationDate
 				});
+
+				console.log(`${STARTUP_PRE} > initialCookies > updated cookie id: ${cookie.id}, name: ${cookie.name}`, cookie);
 			}
 		});
 	});
-
-	console.log(`${STARTUP_PRE} | INITIAL COOKIES | END`);
 }
 
 let signalRTimerId;

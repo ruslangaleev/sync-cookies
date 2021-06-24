@@ -46,12 +46,11 @@ const syncCookieClient = {
 	  }
 	},
 	getCookies: async () => {
-		const PRE = `SYNC COOKIE CLIENT | GET COOKIES`;
+		const PRE = `syncCookieClient > getCookies`;
 
-		console.log(`${PRE} | START`);
+		console.log(`${PRE} try get cookies`);
 
 		const accessToken = await getFromLocalStorageAsync(ACCESS_TOKEN);
-		console.log(`${PRE} | ACCESS TOKEN`, accessToken);
 		try {
 			const dataRequest = {
 				method: 'GET',
@@ -63,60 +62,55 @@ const syncCookieClient = {
 		  };
   
 		  const response = await fetch(SERVER_ADDRESS + `/api/cookies`, dataRequest);
-		  
-		  console.log(`${PRE} | RESPONSE STATUS: ${response.status}`);
 
-		  // 401:
-		  
 		  if (response.status == 401) {
 			return {
-			  errorMessage: 'У клиента нет доступа'
+				status: response.status,
+				errorMessage: 'Пользователь не авторизован'
 			};
 		  }
 		  
-		  // 400:
-		  
 		  const content = await response.json();
-
-		  console.log(`${PRE} | CONTENT JSON`, content);
 		  
 		  if (response.status == 400) {
 			return {
-			  success: false,
-			  serverError: true,
-			  errorMessage: content.errorMessage
+				status: response.status,
+				errorMessage: content.errorMessage
 			};
 		  }
 		  
-		  // 200:
-		  
+		  if (response.status != 200) {
+			return {
+				status: response.status,
+				errorMessage: content
+			}
+		  }
+
 		  return {
-			success: true,
+			status: 200,
 			content: content
 		  };
 		} catch (error) {
-			console.log(`${PRE} | REQUEST ERROR`);
-
 			return {
-			  success: false,
-			  serverError: false,
-			  errorMessage: 'Ошибка отправления запроса. Либо сервер недоступен, либо запрос составлен неверно'
-		  };
+				status: 500
+			}
 		}
 	},
 	updateCookie: async (cookieId, value, expirationDate) => {	  
+	  const PRE = `syncCookieClient > updateCookie`;
+
 	  const cookieInfo = {
-	    cookieId: cookieId,
 	    value: value,
 		expirationDate: expirationDate
 	  }
 
-	  console.log(`TRY SEND | COOKIEID: ${cookieId} | VALUE: ${value}`);
+	  console.log(`${PRE} > try send, cookieId: ${cookieId}, value: ${value}`);
 
 	  const accessToken = await getFromLocalStorageAsync(ACCESS_TOKEN);
 	  
 	  const dataRequest = {
-	    method: 'POST',
+	    method: 'PUT',
+		mode: 'no-cors',
 	    headers: {
 	      'Content-Type': 'application/json',
 	      'Accept': 'application/json',
@@ -126,41 +120,38 @@ const syncCookieClient = {
 	  };
 	  
 	  try {
-		const response = await fetch(SERVER_ADDRESS + '/api/cookies', dataRequest);
+		const response = await fetch(SERVER_ADDRESS + `/api/cookies/${cookieId}`, dataRequest);
 	    
-		console.log(`RESPONSE | STATUS: ${response.status}`);
-
-	    // 401:
-	    
-	    if (response.status == 401) {      
-	      return {
-	        errorMessage: 'У клиента нет доступа'
-	      };
-	    }
-	    
-	    // 400:
+		if (response.status == 401) {
+			return {
+				status: response.status,
+				errorMessage: 'Пользователь не авторизован'
+			};
+		}
 	    
 	    const content = await response.json();
-		console.log(`RESPONSE CONTENT | CONTENT:`, content);
+		
+		if (response.status == 400) {
+			return {
+				status: response.status,
+				errorMessage: content.errorMessage
+			};
+		}		
 	    
-	    if (response.status == 400) {      
-	      return {
-	        errorMessage: content.errorMessage,
-	        accessToken: content.access_token
-	      };
-	    }
-	    
-	    // 200:
+		if (response.status != 200) {
+			return {
+				status: response.status,
+				errorMessage: content
+			}
+		  }
 
-		console.log(`SENT | COOKIEID: ${cookieId} | VALUE: ${value}`);
-	    
-	    return true;
+		  return {
+			status: 200
+		  };
 	  } catch (error) {
-	  	setTimeout(() => { syncCookieClient.updateCookie(cookieId, value) }, 5000); // TODO: изменить на 2000
-	  	// return {
-	    // 	errorMessage: 'Ошибка отправления запроса. Либо сервер недоступен, либо запрос составлен неверно'
-	    // };
-		console.log(`ERROR SEND | ERROR: ${error}`);
+		return {
+			status: 500
+		}
 	  }		
 	}
 }

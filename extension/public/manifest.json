@@ -6,7 +6,8 @@
   "permissions": [
     "storage",
     "cookies",
-    "<all_urls>"
+    "<all_urls>",
+    "webRequest"
   ],
   "icons": { 
     "16": "pechenie-16x16.png",
