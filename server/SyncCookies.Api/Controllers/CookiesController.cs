@@ -110,6 +110,10 @@ namespace SyncCookies.Api.Controllers
         {
             var emailClaim = User.Claims.Where(t => t.Type == ClaimsIdentity.DefaultNameClaimType).Single();
             var user = await _userRepo.GetAsync(emailClaim.Value);
+            if (user == null)
+            {
+                return BadRequest("Пользователь не найден");
+            }
 
             var cookie = await _cookieRepo.GetByCookieIdAsync(cookieId);
 
