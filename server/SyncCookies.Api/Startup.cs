@@ -96,7 +96,7 @@ namespace SyncCookies.Api
                 {   
                     Version= "v1",
                     Title = "JWT Token Authentication API",
-                    Description="version 1.0.1 Commit 18323c970a0ffc9dcb5c6f9d74f04998ab3f6a8f" });
+                    Description="version 1.0.1 Commit 2c8f1653df000d193a1dc705d783e236f9157ae6" });
                 // To Enable authorization using Swagger (JWT)
                 swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
                 {  
