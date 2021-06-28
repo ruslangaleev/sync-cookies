@@ -2,38 +2,38 @@
 // Данное событие обрабатывает все входящие заголовки
 // Если в заголовке ответа есть статус 401, значит клиент (браузер) потерял доступ к ресурсу и необходимо заново авторизоваться
 // Но при этом, если есть статус 401, то зачищаем все куки этого ресурса, т.к. возникают проблемы зацикливания запросов
-chrome.webRequest.onHeadersReceived.addListener(async (details) => {
-	if (!await isSyncEnabled()) {
-		return console.log('Sync is disabled');
-	}
+// chrome.webRequest.onHeadersReceived.addListener(async (details) => {
+// 	if (!await isSyncEnabled()) {
+// 		return console.log('Sync is disabled');
+// 	}
 
-	const traceId = uuidv4();
-	const statusCode = details.statusCode;
-	const initiator = details.initiator;
+// 	const traceId = uuidv4();
+// 	const statusCode = details.statusCode;
+// 	const initiator = details.initiator;
 
-	// Синхронизация может быть включена, то на сервере не заведены источники
-	const cookieInfoes = await getFromLocalStorageAsync(COOKIE_INFOES);
-	if (!cookieInfoes) {
-		return;
-	}
+// 	// Синхронизация может быть включена, то на сервере не заведены источники
+// 	const cookieInfoes = await getFromLocalStorageAsync(COOKIE_INFOES);
+// 	if (!cookieInfoes) {
+// 		return;
+// 	}
 	
-	// Хоть и источники на сервере могут быть заведены, то могут не совпадать с текущими запросами
-	const resource = cookieInfoes.find(info => info.url.indexOf(initiator) > -1);
-	if (!resource) {
-		return;
-	}
+// 	// Хоть и источники на сервере могут быть заведены, то могут не совпадать с текущими запросами
+// 	const resource = cookieInfoes.find(info => info.url.indexOf(initiator) > -1);
+// 	if (!resource) {
+// 		return;
+// 	}
 
-	if (statusCode == 401) {
-		resource.cookies.forEach(cookie =>
-			chrome.cookies.remove({
-				url: resource.url,
-				name: cookie.name
-			}, (cookie) => {
-				console.log(`TraceId: ${traceId} | Deleted cookie | Url: ${resource.url} | Name: ${cookie.name}`);
-			})
-		);
-	}
-}, { urls: ["<all_urls>"] });
+// 	if (statusCode == 401) {
+// 		resource.cookies.forEach(cookie =>
+// 			chrome.cookies.remove({
+// 				url: resource.url,
+// 				name: cookie.name
+// 			}, (cookie) => {
+// 				console.log(`TraceId: ${traceId} | Deleted cookie | Url: ${resource.url} | Name: ${cookie.name}`);
+// 			})
+// 		);
+// 	}
+// }, { urls: ["<all_urls>"] });
 
 async function isSyncEnabled() {
 	return await getFromLocalStorageAsync(IS_ENABLE);
