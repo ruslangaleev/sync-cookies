@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 
 namespace SyncCookies.Api.Dtos.Cookies
 {
-    public class CookieDto : BaseCookieDto
+    public class BaseCookieDto
     {
-        public Guid Id { get; set; }
+        public string Value { get; set; }
 
-        public string Name { get; set; }
+        public float? ExpirationDate { get; set; }
     }
 }

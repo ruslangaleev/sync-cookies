@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SyncCookies.Data.Repositories;
@@ -10,17 +11,20 @@ using SyncCookies.Services;
 
 namespace SyncCookies.Api.Controllers
 {
+    [Authorize(Roles = "ADMIN")]
     [Route("api/users")]
     [ApiController]
     public class UsersController : ControllerBase
     {
         private readonly IClientRepository _clientRepo;
         private readonly IUserRepository _userRepo;
+        private readonly IConnectionMapping<string> _connectionMapping;
 
-        public UsersController(IClientRepository clientRepo, IUserRepository userRepo)
+        public UsersController(IClientRepository clientRepo, IUserRepository userRepo, IConnectionMapping<string> connectionMapping)
         {
             _clientRepo = clientRepo;
             _userRepo = userRepo;
+            _connectionMapping = connectionMapping;
         }
 
         [HttpGet]
@@ -76,6 +80,31 @@ namespace SyncCookies.Api.Controllers
             await _userRepo.RemoveAsync(userId);
 
             return Ok("Пользователь успешно удален");
+        }
+
+        [HttpGet("online")]
+        public async Task<IActionResult> GetAllUsersOnlineAsync()
+        {
+            var users = await _userRepo.GetAllAsync();
+
+            var result = new List<object>();
+
+            foreach (var user in users)
+            {
+                var connection = _connectionMapping.GetConnections(user.Email);
+                result.Add(new
+                {
+                    user = new {
+                        id = user.Id,
+                        firstName = user.FirstName,
+                        lastName = user.LastName,
+                        email = user.Email,
+                        connectionIds = connection.ToArray()
+                    }
+                });
+            }
+
+            return Ok(result);
         }
     }
 }

@@ -53,6 +53,11 @@ namespace SyncCookies.Api.Controllers
         public async Task<IActionResult> GetByClientAsync(Guid clientId)
         {
             var client = await _clientRepo.GetByClientAsync(clientId);
+            if (client == null)
+            {
+                return NotFound();
+            }
+
             var cookieIds = await _cookieRepo.GetByClientIdAsync(clientId);
             var users = await _userRepo.GetByClientIdAsync(clientId);
 
@@ -63,16 +68,17 @@ namespace SyncCookies.Api.Controllers
 
                 cookies.Add(new
                 {
-                    id = item.Id,
+                    Id = item.Id,
                     value = item.Value,
-                    name = cookieTemplate.Name
+                    name = cookieTemplate.Name,
+                    expirationDate = item.ExpirationDate
                 });
             }
 
             return Ok(new
             {
-                id = client.Id,
-                name = client.Name,
+                clientId = client.Id,
+                clientName = client.Name,
                 cookies = cookies,
                 users = users
             });
@@ -148,6 +154,12 @@ namespace SyncCookies.Api.Controllers
                 return BadRequest("Пользователь не найден");
             }
 
+            var channel = await _clientRepo.GetChannelAsync(clientId, userId);
+            if (channel != null)
+            {
+                return BadRequest("Пользователь уже подписан под данную учетку");
+            }
+
             var resource = await _resourceRepo.GetAsync(client.ResourceId, true);
 
             await _clientRepo.CreateChannelAsync(new Channel
@@ -178,6 +190,38 @@ namespace SyncCookies.Api.Controllers
             });
 
             return Ok("Подписка успешно создана");
+        }
+
+        [HttpDelete("{clientId}/users/{userId}")]
+        public async Task<IActionResult> DeleteUserFromChannel(Guid clientId, Guid userId)
+        {
+            var client = await _clientRepo.GetByClientAsync(clientId, include: true);
+            if (client == null)
+            {
+                return BadRequest("Клиент не найден");
+            }
+
+            var user = await _userRepo.GetAsync(userId);
+            if (user == null)
+            {
+                return BadRequest("Пользователь не найден");
+            }
+
+            var channel = await _clientRepo.GetChannelAsync(clientId, userId);
+            if (channel == null)
+            {
+                return BadRequest("Пользователь не был подписан под данную учетку");
+            }
+
+            _clientRepo.RemoveChannel(channel);
+            await _clientRepo.SaveChangesAsync();
+
+            var resource = await _resourceRepo.GetAsync(client.ResourceId, true);
+            var connection = _connectionMapping.GetConnections(user.Email);
+
+            await _cookieHub.Clients.Client(connection.SingleOrDefault()).SendAsync("RemoveChannel", new { ResourceId = resource.Id });
+
+            return Ok("Подписка успешно удалена");
         }
 
         [HttpDelete("{clientId}")]
