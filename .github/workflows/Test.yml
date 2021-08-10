@@ -9,8 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    steps:
+    steps:    
     - uses: actions/checkout@v2
     - name: Setup .NET 3.1.x
       uses: actions/setup-dotnet@v1
@@ -19,7 +18,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ./server/SyncCookies.Api
     - name: Build
-      run: dotnet build ./server/SyncCookies.Api --no-restore
+      run: dotnet build ./server/SyncCookies.Api --no-restore       
     - name: Test
       run: dotnet test ./server/SyncCookies.Api --no-build --verbosity normal
   publish:
@@ -41,6 +40,18 @@ jobs:
         run: dotnet restore ./server/SyncCookies.Api
       - name: Build
         run: dotnet build ./server/SyncCookies.Api --no-restore
+      - name: github_sha
+        shell: bash
+        run: echo ${GITHUB_SHA}
+      - name: write file github_sha
+        uses: DamianReeves/write-file-action@master
+        with:
+          path: ./server/SyncCookies.Api/current-git-commit-sha
+          contents: ${{ github.sha }}
+          write-mode: overwrite
+      - name: current-git-commit-sha added in ./server
+        shell: bash
+        run: ls -d "$PWD/server/"*
       - name: Publish files to VPS via SSH key
         uses: garygrossgarten/github-action-scp@release
         with:

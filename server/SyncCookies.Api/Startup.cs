@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -89,6 +92,17 @@ namespace SyncCookies.Api
 
             services.AddControllers();
 
+            // Данный hash гита будет использоваться в качестве версионности API.
+            // В чем преимущество? hash автогенирируеммый. Не нужно на каждое устанавливать версионность
+            //var gitHash = Environment.GetEnvironmentVariable("GIT_HASH");
+
+            var path = Path.Combine("current-git-commit-sha");
+            var sha = "NOT FOUND";
+            if (File.Exists(path))
+            {
+                sha = File.ReadAllText(path);
+            }
+
             services.AddSwaggerGen(swagger =>  
             {  
                 //This is to generate the Default UI of Swagger Documentation
@@ -96,7 +110,7 @@ namespace SyncCookies.Api
                 {   
                     Version= "v1",
                     Title = "JWT Token Authentication API",
-                    Description="version 1.0.1 Commit 18323c970a0ffc9dcb5c6f9d74f04998ab3f6a8f" });
+                    Description = $"Current git commit sha: {sha}" });
                 // To Enable authorization using Swagger (JWT)
                 swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
                 {  
