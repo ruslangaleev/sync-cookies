@@ -90,10 +90,10 @@ async function configureSignalR() {
 	  .build();
 
   connection.on('NewCookie', async (cookie) => {
-    console.log(`New Cookie`, cookie);
+    logger.log(`New Cookie`, cookie);
 
-    const key = UPDATE_FROM_SERVER_STORAGE + `_${cookie.url}_${cookie.name}`;
-    await setInLocalStorageAsync(key, cookie);
+    // const key = UPDATE_FROM_SERVER_STORAGE + `_${cookie.url}_${cookie.name}`;
+    // await setInLocalStorageAsync(key, cookie);
     await setCookie(cookie);
   });
   
