@@ -6,7 +6,7 @@ using SyncCookies.Data.Repositories;
 
 namespace SyncCookies.Services.Hubs
 {
-    [Authorize]
+    //[Authorize]
     public class CookieHub : Hub
     {
         //private readonly static ConnectionMapping<string> _connections = 
