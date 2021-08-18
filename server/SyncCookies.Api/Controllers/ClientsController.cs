@@ -170,7 +170,7 @@ namespace SyncCookies.Api.Controllers
             await _clientRepo.SaveChangesAsync();
 
             // Оповещаем данного клиента, что у него новый источник
-            var connection = _connectionMapping.GetConnections(user.Email);
+            var connection = _connectionMapping.GetConnectionsByKey(user.Email);
             await _cookieHub.Clients.AllExcept(new string[] { connection.SingleOrDefault() }).SendAsync("NewResource", new 
             {
                 ResourceId = resource.Id,
@@ -217,7 +217,7 @@ namespace SyncCookies.Api.Controllers
             await _clientRepo.SaveChangesAsync();
 
             var resource = await _resourceRepo.GetAsync(client.ResourceId, true);
-            var connection = _connectionMapping.GetConnections(user.Email);
+            var connection = _connectionMapping.GetConnectionsByKey(user.Email);
 
             await _cookieHub.Clients.Client(connection.SingleOrDefault()).SendAsync("RemoveChannel", new { ResourceId = resource.Id });
 

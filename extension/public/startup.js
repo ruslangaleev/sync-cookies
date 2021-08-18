@@ -40,11 +40,11 @@ async function run() {
 	result.content.forEach(cookieInfo => {
 		cookieInfo.cookies.forEach(async (cookie) => {
       // TODO: пояснение смотреть в cookiesOnChanged.js
-      /*
+      
 			const key = UPDATE_FROM_SERVER_STORAGE + `_${cookieInfo.url}_${cookie.name}`;
       logger.log(`Configure | updateFromServerkey: ${key} | existCookie:`, cookie);
 			await setInLocalStorageAsync(key, cookie);
-      */
+      
 			if (cookie.value) {
 				await setCookie({
 					url: cookieInfo.url,
@@ -90,10 +90,19 @@ async function configureSignalR() {
 	  .build();
 
   connection.on('NewCookie', async (cookie) => {
+    const isEnable = await getFromLocalStorageAsync(IS_ENABLE_STORAGE);
+
+    if (!isEnable) {
+      logger.warn('Extension is disabled');
+      return false;
+    }
+
     logger.log(`New Cookie`, cookie);
 
-    // const key = UPDATE_FROM_SERVER_STORAGE + `_${cookie.url}_${cookie.name}`;
-    // await setInLocalStorageAsync(key, cookie);
+    // записываем в хранилище что с сервера пришел новый кук, для того чтобы этот новый кук снова не отправить на сервер
+    const key = UPDATE_FROM_SERVER_STORAGE + `_${cookie.url}_${cookie.name}`;
+    await setInLocalStorageAsync(key, cookie);
+
     await setCookie(cookie);
   });
   

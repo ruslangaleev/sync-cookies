@@ -45,17 +45,17 @@ chrome.cookies.onChanged.addListener(async (changeInfo) => {
     logger.log(`TraceId ${traceId} | cause: explicit, removed: false | Cookie name: ${cookieName} | Url ${resource.url} | Value: ${cookieValue}`);
 
     // TODO: локально при проверке, если background инициализирует куки, то данное событие не вызывается
-    /*
+    
     // Если с сервера пришли новые куки, то после установки куков в браузер, вызывется текущее событие
     const updateFromServerkey = `${UPDATE_FROM_SERVER_STORAGE}_${resource.url}_${cookieName}`;
     const existCookie = await getFromLocalStorageAsync(updateFromServerkey);
     logger.log(`TraceId ${traceId} | updateFromServerkey: ${updateFromServerkey} | existCookie:`, existCookie);
-    if (existCookie) {
+    if (existCookie.value == cookieValue) {
       // Поэтому сбрасываем если куки пришли от нашего сервера
-      await removeFromLocalStorageAsync(updateFromServerkey);
+      // TODO: Проверить вообще, работает ли удаление
+      //await removeFromLocalStorageAsync(updateFromServerkey);
       return;
     }
-    */
 
     // Если куки пришли из первоисточника, то отправляем на наш сервер
     var result = await syncCookieClient.updateCookie(cookie.id, cookieValue, expirationDate, traceId);

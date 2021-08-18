@@ -19,6 +19,7 @@ namespace SyncCookies.Data.Repositories
 
         Task CreateChannelAsync(Channel channel);
         Task<Channel> GetChannelAsync(Guid clientId, Guid userId);
+        Task<IEnumerable<Channel>> GetChannelsAsync(Guid clientId);
         void RemoveChannel(Channel channel);
     }
 
@@ -105,6 +106,11 @@ namespace SyncCookies.Data.Repositories
         public async Task<Channel> GetChannelAsync(Guid clientId, Guid userId)
         {
             return await _context.Channels.Where(t => t.ClientId == clientId && t.UserId == userId).SingleOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<Channel>> GetChannelsAsync(Guid clientId)
+        {
+            return await _context.Channels.Where(t => t.ClientId == clientId).ToListAsync();
         }
 
         public async Task RemoveAsync(Client client)

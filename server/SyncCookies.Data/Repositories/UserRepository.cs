@@ -11,6 +11,7 @@ namespace SyncCookies.Data.Repositories
     {
         Task<User> GetAsync(Guid userId);
         Task<User> GetAsync(string email);
+        Task<IEnumerable<User>> GetByUserIdsAsync(IEnumerable<Guid> userIds);
         Task<List<User>> GetByClientIdAsync(Guid clientId);
         Task<List<User>> GetAllAsync();
         Task AddAsync(User user);
@@ -86,6 +87,11 @@ namespace SyncCookies.Data.Repositories
                 FirstName = t.User.FirstName,
                 LastName = t.User.LastName
             }).ToList();
+        }
+
+        public async Task<IEnumerable<User>> GetByUserIdsAsync(IEnumerable<Guid> userIds)
+        {
+            return await _context.Users.Where(t => userIds.Contains(t.Id)).ToListAsync();
         }
     }
 }
