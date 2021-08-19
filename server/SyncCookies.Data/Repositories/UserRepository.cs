@@ -37,7 +37,7 @@ namespace SyncCookies.Data.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<User>> GetAllAsync()
+        public async Task<IEnumerable<User>> GetAllAsync()
         {
             return await _context.Users.ToListAsync();
         }
@@ -77,7 +77,7 @@ namespace SyncCookies.Data.Repositories
             return await _context.Users.SingleOrDefaultAsync(t => t.Email == email);
         }
 
-        public async Task<List<User>> GetByClientIdAsync(Guid clientId)
+        public async Task<IEnumerable<User>> GetByClientIdAsync(Guid clientId)
         {
             var channels = await _context.Channels.Include(t => t.User).Where(t => t.ClientId == clientId).ToListAsync();
             return channels.Select(t => new User
@@ -92,16 +92,6 @@ namespace SyncCookies.Data.Repositories
         public async Task<IEnumerable<User>> GetByUserIdsAsync(IEnumerable<Guid> userIds)
         {
             return await _context.Users.Where(t => userIds.Contains(t.Id)).ToListAsync();
-        }
-
-        Task<IEnumerable<User>> IUserRepository.GetByClientIdAsync(Guid clientId)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<IEnumerable<User>> IUserRepository.GetAllAsync()
-        {
-            throw new NotImplementedException();
         }
     }
 }
