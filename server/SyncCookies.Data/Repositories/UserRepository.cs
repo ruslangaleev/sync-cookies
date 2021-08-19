@@ -12,8 +12,8 @@ namespace SyncCookies.Data.Repositories
         Task<User> GetAsync(Guid userId);
         Task<User> GetAsync(string email);
         Task<IEnumerable<User>> GetByUserIdsAsync(IEnumerable<Guid> userIds);
-        Task<List<User>> GetByClientIdAsync(Guid clientId);
-        Task<List<User>> GetAllAsync();
+        Task<IEnumerable<User>> GetByClientIdAsync(Guid clientId);
+        Task<IEnumerable<User>> GetAllAsync();
         Task AddAsync(User user);
         Task UpdateAsync(User user);
         Task<bool> RemoveAsync(Guid userId);
@@ -92,6 +92,16 @@ namespace SyncCookies.Data.Repositories
         public async Task<IEnumerable<User>> GetByUserIdsAsync(IEnumerable<Guid> userIds)
         {
             return await _context.Users.Where(t => userIds.Contains(t.Id)).ToListAsync();
+        }
+
+        Task<IEnumerable<User>> IUserRepository.GetByClientIdAsync(Guid clientId)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<IEnumerable<User>> IUserRepository.GetAllAsync()
+        {
+            throw new NotImplementedException();
         }
     }
 }

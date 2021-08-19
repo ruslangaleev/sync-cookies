@@ -24,15 +24,19 @@ namespace SyncCookies.Api.Controllers
         private readonly ICookieRepository _cookieRepo;
         private readonly IHubContext<CookieHub> _cookieHub;
         private readonly IConnectionMapping<string> _connectionMapping;
+        private readonly IResourceRepository _resourceRepo;
+        private readonly IUserRepository _userRepo;
 
         public CookieTemplatesController(ICookieTemplateRepository cookieTemplateRepo, IClientRepository clientRepo, ICookieRepository cookieRepo,
-            IHubContext<CookieHub> cookieHub, IConnectionMapping<string> connectionMapping)
+            IHubContext<CookieHub> cookieHub, IConnectionMapping<string> connectionMapping, IResourceRepository resourceRepo, IUserRepository userRepo)
         {
             _cookieTemplateRepo = cookieTemplateRepo;
             _clientRepo = clientRepo;
             _cookieRepo = cookieRepo;
             _cookieHub = cookieHub;
             _connectionMapping = connectionMapping;
+            _resourceRepo = resourceRepo;
+            _userRepo = userRepo;
         }
 
         [HttpGet("{resourceId}")]
@@ -80,6 +84,59 @@ namespace SyncCookies.Api.Controllers
             //});
 
             return Ok(cookieTemplate);
+        }
+
+        [HttpPut("{templateId}")]
+        public async Task<IActionResult> UpdateAsync(Guid templateId, NewCookieTemplateDto newCookieTemplateDto)
+        {
+            if (templateId == Guid.Empty)
+            {
+                return BadRequest($"Param {nameof(templateId)} is empty");
+            }
+
+            var resource = await _resourceRepo.GetAsync(newCookieTemplateDto.ResourceId);
+            if (resource == null)
+            {
+                return BadRequest($"Resource {newCookieTemplateDto.ResourceId} not found");
+            }
+
+            var template = await _cookieTemplateRepo.GetByTemplateAsync(templateId);
+            if (template == null)
+            {
+                return NotFound($"Template {templateId} not found");
+            }
+
+            template.ResourceId = newCookieTemplateDto.ResourceId;
+            template.Name = newCookieTemplateDto.Name;
+            template.Domain = newCookieTemplateDto.Domain;
+
+            _cookieTemplateRepo.Update(template);
+            await _cookieTemplateRepo.SaveChangesAsync();
+
+            // send new cookie by resource id
+            // templateId and resourceId -> users
+            var resources = await _clientRepo.GetByResourceAsync(newCookieTemplateDto.ResourceId);
+            foreach (var item in resources.Data)
+            {
+                var cookies = await _cookieRepo.GetByClientIdAsync(item.Id);
+                // этот кук полетит всем пользователям данног оклиента
+                var cookie = cookies.Data.SingleOrDefault(t => t.CookieTemplateId == templateId);
+
+                var users = await _userRepo.GetByClientIdAsync(item.Id);
+                var emails = users.Select(t => t.Email);
+                var connectionIds = _connectionMapping.GetConnectionsByKeys(emails);
+
+                await _cookieHub.Clients.Clients(connectionIds.ToList()).SendAsync("NewCookie", new
+                { 
+                    id = cookie.Id,
+                    value = cookie.Value,
+                    //expirationDate = cookie.ExpirationDate,
+                    name = template.Name,
+                    url = resource.Url
+                });
+            }           
+
+            return Ok($"Template {templateId} updated");
         }
 
         [HttpDelete("{templateId}")]
