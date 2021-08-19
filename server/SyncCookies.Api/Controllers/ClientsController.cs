@@ -59,7 +59,7 @@ namespace SyncCookies.Api.Controllers
             }
 
             var cookieIds = await _cookieRepo.GetByClientIdAsync(clientId);
-            var users = await _userRepo.GetAsync(clientId);
+            var users = await _userRepo.GetByClientIdAsync(clientId);
 
             var cookies = new List<object>();
             foreach (var item in cookieIds.Data)
