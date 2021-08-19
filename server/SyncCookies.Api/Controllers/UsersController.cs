@@ -91,17 +91,20 @@ namespace SyncCookies.Api.Controllers
 
             foreach (var user in users)
             {
-                var connection = _connectionMapping.GetConnectionsByKey(user.Email);
-                result.Add(new
+                var connections = _connectionMapping.GetConnectionsByKey(user.Email);
+                if (connections.Any())
                 {
-                    user = new {
-                        id = user.Id,
-                        firstName = user.FirstName,
-                        lastName = user.LastName,
-                        email = user.Email,
-                        connectionIds = connection.ToArray()
-                    }
-                });
+                    result.Add(new
+                    {
+                        user = new {
+                            id = user.Id,
+                            firstName = user.FirstName,
+                            lastName = user.LastName,
+                            email = user.Email,
+                            connectionIds = connections.ToArray()
+                        }
+                    });
+                }
             }
 
             return Ok(result);

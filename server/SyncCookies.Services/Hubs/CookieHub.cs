@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using SyncCookies.Data.Repositories;
 
 namespace SyncCookies.Services.Hubs
 {
-    //[Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class CookieHub : Hub
     {
         //private readonly static ConnectionMapping<string> _connections = 
