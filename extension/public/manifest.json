@@ -14,7 +14,7 @@
     "48": "pechenie-48x48.png",
     "128": "pechenie-128x128.png" },  
   "background": {
-    "scripts": ["signalr.min.js", "chromeStorageTypes.js", "syncCookieClient.js", "startup.js", "cookiesOnChanged.js"],
+    "scripts": ["base.js", "signalr.min.js", "startup.js", "syncCookiesClient.js", "cookiesOnChanged.js"],
     "persistent": true 
   },
   "browser_action": {

@@ -1,58 +1,23 @@
-
-// Данное событие обрабатывает все входящие заголовки
-// Если в заголовке ответа есть статус 401, значит клиент (браузер) потерял доступ к ресурсу и необходимо заново авторизоваться
-// Но при этом, если есть статус 401, то зачищаем все куки этого ресурса, т.к. возникают проблемы зацикливания запросов
-// chrome.webRequest.onHeadersReceived.addListener(async (details) => {
-// 	if (!await isSyncEnabled()) {
-// 		return console.log('Sync is disabled');
-// 	}
-
-// 	const traceId = uuidv4();
-// 	const statusCode = details.statusCode;
-// 	const initiator = details.initiator;
-
-// 	// Синхронизация может быть включена, то на сервере не заведены источники
-// 	const cookieInfoes = await getFromLocalStorageAsync(COOKIE_INFOES);
-// 	if (!cookieInfoes) {
-// 		return;
-// 	}
-	
-// 	// Хоть и источники на сервере могут быть заведены, то могут не совпадать с текущими запросами
-// 	const resource = cookieInfoes.find(info => info.url.indexOf(initiator) > -1);
-// 	if (!resource) {
-// 		return;
-// 	}
-
-// 	if (statusCode == 401) {
-// 		resource.cookies.forEach(cookie =>
-// 			chrome.cookies.remove({
-// 				url: resource.url,
-// 				name: cookie.name
-// 			}, (cookie) => {
-// 				console.log(`TraceId: ${traceId} | Deleted cookie | Url: ${resource.url} | Name: ${cookie.name}`);
-// 			})
-// 		);
-// 	}
-// }, { urls: ["<all_urls>"] });
-
-async function isSyncEnabled() {
-	return await getFromLocalStorageAsync(IS_ENABLE);
-}
-
 chrome.cookies.onChanged.addListener(async (changeInfo) => {
-	if (!await isSyncEnabled()) {
-		return console.log('Sync is disabled');
-	}
-
-	const traceId = uuidv4();
+  const traceId = uuidv4();
+  // logger.log(`TraceId: ${traceId} | cookiesOnChanged`, changeInfo);
+  const isEnable = await getFromLocalStorageAsync(IS_ENABLE_STORAGE);
+  if (!isEnable) {
+    logger.warn('Extension is disabled');
+    return;
+  }
 
 	const cookieName = changeInfo.cookie.name;
 	const cookieValue = changeInfo.cookie.value;
 	const cookieDomain = changeInfo.cookie.domain;
 	const expirationDate = changeInfo.cookie.expirationDate;
 
-	const cookieInfoes = await getFromLocalStorageAsync(COOKIE_INFOES);
+  //logger.log(`TraceId: ${traceId} | cause: ${changeInfo.cause} | cookieName: ${cookieName} | changeInfo: `, changeInfo);
+
+  // Вся информация, которая была получена от сервер: адрес источника, из которого необходимо брать куки; какие куки необходимо брать
+	const cookieInfoes = await getFromLocalStorageAsync(COOKIE_INFOES_STORAGE);
 	if (!cookieInfoes) {
+		logger.warn('Cookie Infoes not found')
 		return;
 	}
 
@@ -61,98 +26,57 @@ chrome.cookies.onChanged.addListener(async (changeInfo) => {
 		return;
 	}
 
-	// Настроен ли такой кук на синхронизацию
+	// Настроен ли такой кук на синхронизацию?
 	const cookie = resource.cookies.find(cookie => cookie.name == cookieName);
 	if (!cookie) {
+    //logger.warn(`TraceId: ${traceId} failed`);
 		return;
 	}
 
-	// Если со стороны источника происходит обновление куков, происходят следующие шаги:
-	// Выполняется "cause: overwrite" с "removed: true", то есть сначала куки удаляются, а потом записываются
-	// В результате будут вызваны 2 события: 
-	//      1. cause: overwrite; removed: true
-	//      2. cause: explicit; removed: false
-	if (changeInfo.cause == 'overwrite') {
-		const key = UPDATE_FROM_SERVER + `_${resource.url}_${cookieName}`;
-		const existCookie = await getFromLocalStorageAsync(key);
+  // cause: overwrite, removed: true - происходит удаление кука с текущим значением
+  // cause: explicit, removed: false - установка нового значения в куки
 
-		// existCookie - c сервера
-		// cookieValue - изменения из куков
-		if ((existCookie?.value || cookieValue) && (existCookie?.value != cookieValue)) {
-			console.log(`${COOKIES_ON_CHANGED} > overwrite > start update cookie id: ${cookie.id}, name: ${cookieName}, new value: ${cookieValue}`);
-			const result = await syncCookieClient.updateCookie(cookie.id, cookieValue, expirationDate);
-			if (result.status == 500) {
-				setTimeout(async () => await syncCookieClient.updateCookie(cookie.id, cookieValue, expirationDate), 5000);
-			}
+  // cause: overwrite, removed: true & cause: explicit, removed: false - командой меняем значение в куках, даже если вручную меняем значение
+  // cause: explicit, removed: false - обновление кука от источника
+  // cause: explicit, removed: true - вручную удалили кук
 
-			if (result.status != 200) {
-				console.log(`${COOKIES_ON_CHANGED} > overwrite > response status: ${result.status}, error message: `, result);
-				return;
-			}
+  // Если произошла запись нового кука в браузере, не важно, вручную или от первоистоника
+	if (changeInfo.cause == 'explicit' && !changeInfo.removed) {
+    logger.log(`TraceId ${traceId} | cause: explicit, removed: false | Cookie name: ${cookieName} | Url ${resource.url} | Value: ${cookieValue}`);
 
-			console.log(`success send cookie id: ${cookie.id}, name: ${cookieName}, value: ${cookieValue}`);
-		}
+    // TODO: локально при проверке, если background инициализирует куки, то данное событие не вызывается
+    
+    // Если с сервера пришли новые куки, то после установки куков в браузер, вызывется текущее событие
+    const updateFromServerkey = `${UPDATE_FROM_SERVER_STORAGE}_${resource.url}_${cookieName}`;
+    const existCookie = await getFromLocalStorageAsync(updateFromServerkey);
+    logger.log(`TraceId ${traceId} | updateFromServerkey: ${updateFromServerkey} | existCookie:`, existCookie);
+    if (existCookie.value == cookieValue) {
+      // Поэтому сбрасываем если куки пришли от нашего сервера
+      // TODO: Проверить вообще, работает ли удаление
+      //await removeFromLocalStorageAsync(updateFromServerkey);
+      return;
+    }
 
-		return;
-	}
+    // Если куки пришли из первоисточника, то отправляем на наш сервер
+    var result = await syncCookieClient.updateCookie(cookie.id, cookieValue, expirationDate, traceId);
+
+    if (result.isSuccess) {
+      logger.info(`TraceId: ${traceId} | Message: success sent | Cookie name: ${cookieName} | Url: ${resource.url}`);
+    }
+
+    return;
+  }
 
 	// Если вручную удалили куки
 	if (changeInfo.cause == 'explicit' && changeInfo.removed) {
-		console.log(`${COOKIES_ON_CHANGED} > explicit > cookie name: ${cookieName}`);
-		const existCookie = await syncCookieClient.getCookie(cookie.id);
-		await setCookie(existCookie);
+    logger.log(`TraceId: ${traceId} | cause: explicit, removed: false | Cookie name: ${cookieName} | Url: ${resource.url} | Value: ${cookieValue}`);
 
-		console.log(`${COOKIES_ON_CHANGED} > updated cookie: ${cookieName}`, existCookie);
+		const result = await syncCookieClient.getCookie(cookie.id, traceId);
+
+    if (result.isSuccess)
+    {
+      logger.info(`TraceId: ${traceId} | Message: success get from server | Url: ${resource.url} | Content:`, result.content);
+      await setCookie(result.content);
+    }
 	}
-
-	// TODO: Это возможно даже и не нужно
-	// Если у куков закончился срок годности
-	// if (changeInfo.cause == 'expired_overwrite' && changeInfo.removed) {
-	// 	console.log(`${COOKIES_ON_CHANGED} > expired_overwrite > cookie name: ${cookieName}`);
-
-	// 	const result = await syncCookieClient.updateCookie(cookie.id, '', 0);
-
-	// 	if (result.status != 200) {
-	// 		console.log(`${COOKIES_ON_CHANGED} > expired_overwrite > response status: ${result.status}, error message: `, result.errorMessage);
-	// 		return;
-	// 	}
-		
-	// 	return;
-	// }
 });
-
-// TODO: то что ниже перенести в другой файл
-async function setCookie(cookieSource) {
-	return await new Promise((resolve, reject) => {
-		chrome.cookies.set({
-			url: cookieSource.url,
-			name: cookieSource.name,
-			value: cookieSource.value,
-			domain: cookieSource.domain,
-			expirationDate: cookieSource.expirationDate
-		}, (cookie) => {
-			resolve(cookie);
-		})
-	});
-}
-
-async function setCookie(cookieSource) {
-	return await new Promise((resolve, reject) => {
-		chrome.cookies.set({
-			url: cookieSource.url,
-			name: cookieSource.name,
-			value: cookieSource.value,
-			domain: cookieSource.domain,
-			expirationDate: cookieSource.expirationDate
-		}, (cookie) => {
-			resolve(cookie);
-		})
-	});
-}
-
-function uuidv4() {
-	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-	  var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-	  return v.toString(16);
-	});
-  }

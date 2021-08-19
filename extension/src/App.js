@@ -9,7 +9,7 @@ import {
   Route,
   Link
 } from "react-router-dom";
-import { ACCESS_TOKEN, SERVER_ADDRESS, IS_ENABLE } from './constants/chromeStorageTypes';
+import { ACCESS_TOKEN_STORAGE, IS_ENABLE_STORAGE } from './base';
 import './App.css';
 
 async function setInLocalStorageAsync(key, value) {
@@ -66,8 +66,8 @@ class Home extends React.Component {
   }
 
   async componentDidMount() {
-    const token = await getFromLocalStorageAsync(ACCESS_TOKEN);
-    const isEnable = await getFromLocalStorageAsync(IS_ENABLE);
+    const token = await getFromLocalStorageAsync(ACCESS_TOKEN_STORAGE);
+    const isEnable = await getFromLocalStorageAsync(IS_ENABLE_STORAGE);
 
     this.setState({
       accessToken: token,
@@ -76,15 +76,14 @@ class Home extends React.Component {
   }
 
   async enableSync() {
-    await setInLocalStorageAsync(IS_ENABLE, true);
-    await chrome.extension.getBackgroundPage().initial();
-    await chrome.extension.getBackgroundPage().connect();
+    await setInLocalStorageAsync(IS_ENABLE_STORAGE, true);
+    await chrome.extension.getBackgroundPage().main();
     this.setState({ isEnable: true });
   }
 
   async disableSync() {
-    await setInLocalStorageAsync(IS_ENABLE, false);
-    await chrome.extension.getBackgroundPage().disconnect();
+    await setInLocalStorageAsync(IS_ENABLE_STORAGE, false);
+    await chrome.extension.getBackgroundPage().stop();
     this.setState({ isEnable: false });
   }
 
@@ -134,7 +133,7 @@ function Token() {
   };
 
   const saveToken = async () => {
-    await setInLocalStorageAsync(ACCESS_TOKEN, token);
+    await setInLocalStorageAsync(ACCESS_TOKEN_STORAGE, token);
   };
 
   return(

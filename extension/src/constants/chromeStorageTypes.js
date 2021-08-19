@@ -1,5 +1,0 @@
-export const SERVER_ADDRESS = 'SERVER_ADDRESS';
-export const COOKIE_INFOES = 'COOKIE_INFOES';
-export const IS_ENABLE = 'IS_ENABLE';
-export const ACCESS_TOKEN = 'ACCESS_TOKEN';
-export const UPDATE_FROM_SERVER = 'UPDATE_FROM_SERVER';

@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -62,8 +65,7 @@ namespace SyncCookies.Api
 
                                 // If the request is for our hub...
                                 var path = context.HttpContext.Request.Path;
-                                if (!string.IsNullOrEmpty(accessToken) &&
-                                    (path.StartsWithSegments("/hubs/cookie")))
+                                if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/hubs")))
                                 {
                                     // Read the token out of the query string
                                     context.Token = accessToken;
@@ -89,6 +91,17 @@ namespace SyncCookies.Api
 
             services.AddControllers();
 
+            // Данный hash гита будет использоваться в качестве версионности API.
+            // В чем преимущество? hash автогенирируеммый. Не нужно на каждое устанавливать версионность
+            //var gitHash = Environment.GetEnvironmentVariable("GIT_HASH");
+
+            var path = Path.Combine("current-git-commit-sha");
+            var sha = "NOT FOUND";
+            if (File.Exists(path))
+            {
+                sha = File.ReadAllText(path);
+            }
+
             services.AddSwaggerGen(swagger =>  
             {  
                 //This is to generate the Default UI of Swagger Documentation
@@ -96,7 +109,7 @@ namespace SyncCookies.Api
                 {   
                     Version= "v1",
                     Title = "JWT Token Authentication API",
-                    Description="version 1.0.1 Commit 2c8f1653df000d193a1dc705d783e236f9157ae6" });
+                    Description = $"Current git commit sha: {sha}" });
                 // To Enable authorization using Swagger (JWT)
                 swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
                 {  

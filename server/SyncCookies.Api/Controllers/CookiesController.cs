@@ -141,12 +141,19 @@ namespace SyncCookies.Api.Controllers
             var template = await _cookieTemplateRepo.GetByTemplateAsync(cookie.CookieTemplateId);
             var resource = await _resourceRepo.GetAsync(template.ResourceId);
 
-            var connection = _connectionMapping.GetConnections(user.Email);
-            await _cookieHub.Clients.AllExcept(new string[] { connection.SingleOrDefault() }).SendAsync("NewCookie", new 
+            var channels = await _clientRepo.GetChannelsAsync(cookie.ClientId);
+            var userIds = channels.Select(t => t.UserId);
+            var users = await _userRepo.GetByUserIdsAsync(userIds);
+            var emails = users.Where(t => t.Email != user.Email).Select(t => t.Email);
+            //var connection = _connectionMapping.GetConnections(user.Email);
+            // получаем список всех пользователей текущего client и кроме текущего пользователя
+            var connectionIds = _connectionMapping.GetConnectionsByKeys(emails);
+            // TODO: а вот и ошибка - отправить всем кроме себя, а нужно отправить только своей подгруппе
+            await _cookieHub.Clients.Clients(connectionIds.ToList()).SendAsync("NewCookie", new
             { 
                 id = cookie.Id,
                 value = cookie.Value,
-                expirationDate = cookie.ExpirationDate,
+                //expirationDate = cookie.ExpirationDate,
                 name = template.Name,
                 url = resource.Url
             });

@@ -91,20 +91,48 @@ namespace SyncCookies.Api.Controllers
 
             foreach (var user in users)
             {
-                var connection = _connectionMapping.GetConnections(user.Email);
-                result.Add(new
+                var connections = _connectionMapping.GetConnectionsByKey(user.Email);
+                if (connections.Any())
                 {
-                    user = new {
-                        id = user.Id,
-                        firstName = user.FirstName,
-                        lastName = user.LastName,
-                        email = user.Email,
-                        connectionIds = connection.ToArray()
-                    }
-                });
+                    result.Add(new
+                    {
+                        user = new {
+                            id = user.Id,
+                            firstName = user.FirstName,
+                            lastName = user.LastName,
+                            email = user.Email,
+                            connectionIds = connections.ToArray()
+                        }
+                    });
+                }
             }
 
             return Ok(result);
+        }
+
+        [HttpGet("{userId}/clients")]
+        public async Task<IActionResult> GetClientsASync(Guid userId)
+        {
+            //if (userId == Guid.Empty)
+            //{
+            //    return BadRequest($"Не указан userId. Значение: {userId}");
+            //}
+
+            //var user = await _userRepo.GetAsync(userId);
+            //if (user == null)
+            //{
+            //    return NotFound($"Пользователь {userId} не найден");
+            //}
+
+            //var clients = await _clientRepo.GetClientsByUserIdAsync(userId);
+
+            //var result = clients.Select(t => new {
+            //    url = t.Resource.Url,                
+            //    name = t.Name
+            //});
+
+
+            return Ok();
         }
     }
 }

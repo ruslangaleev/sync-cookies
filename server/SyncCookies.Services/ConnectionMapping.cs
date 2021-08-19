@@ -9,7 +9,9 @@ namespace SyncCookies.Services
 
         void Add(T key, string connectionId);
 
-        IEnumerable<string> GetConnections(T key);
+        IEnumerable<string> GetConnectionsByKey(T key);
+
+        IEnumerable<string> GetConnectionsByKeys(IEnumerable<T> keys);
 
         void Remove(T key, string connectionId);
     }
@@ -44,7 +46,22 @@ namespace SyncCookies.Services
             }
         }
 
-        public IEnumerable<string> GetConnections(T key)
+        public IEnumerable<string> GetConnectionsByKeys(IEnumerable<T> keys)
+        {
+            var conns = new List<string>();
+            foreach (var key in keys)
+            {
+                HashSet<string> connections = null;
+                if (_connections.TryGetValue(key, out connections))
+                {
+                    conns.Add(connections.SingleOrDefault());
+                }
+            }
+
+            return conns;
+        }
+
+        public IEnumerable<string> GetConnectionsByKey(T key)
         {
             HashSet<string> connections;
             if (_connections.TryGetValue(key, out connections))
