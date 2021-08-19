@@ -29,7 +29,7 @@ async function run() {
   const result = await syncCookieClient.getCookies();
   
   if (!result.isSuccess) {
-    setTimeout(run, 5000);
+    // setTimeout(run, 5000); // Это что то лишнее..
     return false;
   }
 
