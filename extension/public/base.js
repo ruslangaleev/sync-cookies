@@ -66,7 +66,7 @@ async function setCookie(cookieSource) {
 			name: cookieSource.name,
 			value: cookieSource.value,
 			domain: cookieSource.domain,
-			//expirationDate: cookieSource.expirationDate
+			expirationDate: cookieSource.expirationDate
 		}, (cookie) => {
 			resolve(cookie);
 		})
