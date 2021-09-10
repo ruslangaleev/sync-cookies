@@ -126,7 +126,7 @@ namespace SyncCookies.Api.Controllers
                 Cookies = cookies.Select(async t =>
                 {
                     var cookieTemplate = await _cookieTemplateRepo.GetByTemplateAsync(t.CookieTemplateId);
-                    return new CookieDto 
+                    return new CookieDto
                     { 
                         Value = t.Value,
                         Id = t.Id,

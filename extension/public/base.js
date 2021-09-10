@@ -73,6 +73,20 @@ async function setCookie(cookieSource) {
 	});
 }
 
+async function getCookieAll(name, url) {
+  return await new Promise((resolve, reject) => {
+    chrome.cookies.getAll({"name": name, "url": url}, function(cookie) {
+      resolve(cookie);
+    });
+  })
+}
+
+async function removeCookie(name, url) {
+  return await new Promise((resolve, reject) => {
+    chrome.cookies.remove({"name": name, "url": url});
+  })
+}
+
 async function setInLocalStorageAsync(key, value) {
 	return await new Promise((resolve, reject) => {
 		chrome.storage.local.set({[key]: value}, () => {

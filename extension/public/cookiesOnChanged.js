@@ -33,12 +33,16 @@ chrome.cookies.onChanged.addListener(async (changeInfo) => {
 		return;
 	}
 
-  // cause: overwrite, removed: true - происходит удаление кука с текущим значением
-  // cause: explicit, removed: false - установка нового значения в куки
-
-  // cause: overwrite, removed: true & cause: explicit, removed: false - командой меняем значение в куках, даже если вручную меняем значение
-  // cause: explicit, removed: false - обновление кука от источника
-  // cause: explicit, removed: true - вручную удалили кук
+  // Возникла проблема: После автоматической установки куков, спустя время браузер дублирует этот же кук, но с другим доменом.
+  // Решить проблему удается только вручную удалив куки и автотически подгрузив с сервера. Скорее Chrome дубликаты сам создает
+  // Неважно, кук удаляется или создается, мы просто смотрим, если такой кук уже есть в браузере, то оба удаляем и подгружаем с сервера
+  var cookies = await getCookieAll(cookieName, resource.url);
+  if (cookies) {
+    if (cookies.length > 1) {
+      await removeCookie(cookieName, resource.url);
+      return;
+    }
+  }
 
   // Если произошла запись нового кука в браузере, не важно, вручную или от первоистоника
 	if (changeInfo.cause == 'explicit' && !changeInfo.removed) {
@@ -69,7 +73,7 @@ chrome.cookies.onChanged.addListener(async (changeInfo) => {
 
 	// Если вручную удалили куки
 	if (changeInfo.cause == 'explicit' && changeInfo.removed) {
-    logger.log(`TraceId: ${traceId} | cause: explicit, removed: false | Cookie name: ${cookieName} | Url: ${resource.url} | Value: ${cookieValue}`);
+    logger.log(`TraceId: ${traceId} | cause: ${changeInfo.cause}, removed: ${changeInfo.removed} | Cookie name: ${cookieName} | Url: ${resource.url} | Value: ${cookieValue}`);
 
 		const result = await syncCookieClient.getCookie(cookie.id, traceId);
 
