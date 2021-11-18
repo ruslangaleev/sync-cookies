@@ -4,7 +4,7 @@ const syncCookieClient = {
 
 		const url = SERVER_ADDRESS() + `/api/cookies`;
 
-		logger.log(`TraceId: ${traceId}. Get cookies. Url: ${url}`);
+		logger.info(`TraceId: ${traceId}. Get cookies. Url: ${url}`);
 		try {
 			const dataRequest = {
 				method: 'GET',
@@ -14,7 +14,7 @@ const syncCookieClient = {
 						'Authorization': 'Bearer ' + accessToken
 					},
 		  };
-			logger.log(`Request: url: ${url}, data:`, dataRequest);
+			logger.info(`Request: url: ${url}, data:`, dataRequest);
 		  const response = await fetch(url, dataRequest);
 
 		  if (response.status == 401) {
@@ -73,7 +73,7 @@ const syncCookieClient = {
 	  
 		const url = `${SERVER_ADDRESS()}/api/cookies/${cookieId}`;
 
-		logger.log(`TraceId: ${traceId} | Message: update cookie | Url: ${url} | dataContext:`, dataRequest);
+		logger.info(`TraceId: ${traceId} | Message: update cookie | Url: ${url} | dataContext:`, dataRequest);
 
 	  try {
 			const response = await fetch(url, dataRequest);
@@ -127,7 +127,7 @@ const syncCookieClient = {
 
 		const url = `${SERVER_ADDRESS()}/api/cookies/${cookieId}`;
 
-		logger.log(`TraceId: ${traceId} | Message: get cookie | Url: ${url} | DataRequest:`, dataRequest);
+		logger.info(`TraceId: ${traceId} | Message: get cookie | Url: ${url} | DataRequest:`, dataRequest);
 
 	  try {
 			const response = await fetch(url, dataRequest);

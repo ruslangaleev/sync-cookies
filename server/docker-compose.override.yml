@@ -12,6 +12,8 @@ services:
       - "8082:80"
     environment:
       DB_CONNECTION_STRING: "User ID=testuser; Password=123; Server=db; Port=5432; Database=SyncCookiesTest;"
+      REDIS_SERVER: "redis"
+      REDIS_PORT: 6379
     networks:
       - synccookies-test
 
@@ -21,6 +23,7 @@ services:
       POSTGRES_USER: "testuser"
       POSTGRES_PASSWORD: "123"
       POSTGRES_DB: "SyncCookiesTest"
+      PGDATA: /tmp
     volumes:
       - "./postgres/data:/var/lib/postgresql/data"
     ports:
@@ -35,4 +38,16 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - synccookies-test    
+      - synccookies-test
+
+  redis:
+    container_name: redis
+    ports:
+      - "8083:6379"
+    networks:
+      - synccookies-test
+    volumes:
+      - redis:/usr/local/etc/redis
+
+volumes:
+  redis:
