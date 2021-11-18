@@ -126,36 +126,43 @@ namespace SyncCookies.Api.Controllers
             // Из кеша достаем все куки по clientId Формируем ответ с данными
             var list = new List<object>();
 
-            foreach (var item in clients.Data)
+            try
             {
-                var dic = _cacheService.Get<Dictionary<string, NewCookie>>(item.Id.ToString());
-
-                if (dic == null)
+                foreach (var item in clients.Data)
                 {
-                    continue;
-                }
+                    var dic = _cacheService.Get<Dictionary<string, NewCookie>>(item.Id.ToString());
 
-                var resource = await _resourceRepo.GetAsync(item.ResourceId);
-
-                foreach (var dicitem in dic)
-                {
-                    if (dicitem.Value == null)
+                    if (dic == null)
                     {
                         continue;
                     }
 
-                    list.Add(new
+                    var resource = await _resourceRepo.GetAsync(item.ResourceId);
+
+                    foreach (var dicitem in dic)
                     {
-                        clientId = item.Id.ToString(),
-                        value = dicitem.Value.Value,
-                        path = dicitem.Value.Path,
-                        name = dicitem.Value.Name,
-                        httpOnly = dicitem.Value.HttpOnly,
-                        expirationDate = dicitem.Value.ExpirationDate,
-                        domain = dicitem.Value.Domain,
-                        url = resource.Url
-                    });
+                        if (dicitem.Value == null)
+                        {
+                            continue;
+                        }
+
+                        list.Add(new
+                        {
+                            clientId = item.Id.ToString(),
+                            value = dicitem.Value.Value,
+                            path = dicitem.Value.Path,
+                            name = dicitem.Value.Name,
+                            httpOnly = dicitem.Value.HttpOnly,
+                            expirationDate = dicitem.Value.ExpirationDate,
+                            domain = dicitem.Value.Domain,
+                            url = resource.Url
+                        });
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
             }
 
             return Ok(list);

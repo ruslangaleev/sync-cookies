@@ -1,7 +1,8 @@
 /*global chrome*/
 // yarn build
 
-const ENV = "DEBUG";
+// const ENV = "DEBUG";
+const ENV = "PROD";
 
 export const IS_ENABLE_STORAGE = 'IS_ENABLE';
 // генерируется
