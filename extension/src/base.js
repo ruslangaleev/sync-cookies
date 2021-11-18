@@ -5,7 +5,9 @@ const ENV = "DEBUG";
 
 export const IS_ENABLE_STORAGE = 'IS_ENABLE';
 // генерируется
-const COOKIE_INFOES_STORAGE = 'COOKIE_INFOES';
+// const COOKIE_INFOES_STORAGE = 'COOKIE_INFOES';
+
+const CLIENT_INFO = "CLIENT_INFO";
 // генерируется
 const UPDATE_FROM_SERVER_STORAGE = 'UPDATE_FROM_SERVER';
 // генерируется
@@ -22,6 +24,8 @@ const SERVER_ADDRESS = () => {
     // prod
     return "http://cookiestorage.ru";
 }
+
+var clients = [];
 
 const logger = {
   info: (message, obj) => {
@@ -58,7 +62,9 @@ async function setCookie(cookieSource) {
 			name: cookieSource.name,
 			value: cookieSource.value,
 			domain: cookieSource.domain,
-			expirationDate: cookieSource.expirationDate
+			expirationDate: cookieSource.expirationDate,
+            httpOnly: cookieSource.httpOnly,
+            path: cookieSource.path         
 		}, (cookie) => {
 			resolve(cookie);
 		})

@@ -84,9 +84,16 @@ namespace SyncCookies.Api
             services.AddScoped<IClientRepository, ClientRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ICookieTemplateRepository, CookieTemplateRepository>();
+            services.AddScoped<ICacheService, CacheService>();
 
             services.AddSignalR(t => {
                 t.EnableDetailedErrors = true;
+            });
+
+            var redisConnectionString = GetRedisConnectionString();
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConnectionString;
             });
 
             services.AddControllers();
@@ -178,6 +185,20 @@ namespace SyncCookies.Api
             return string.IsNullOrEmpty(connectionString) 
                 ? Configuration.GetConnectionString("DefaultConnection")
                 : connectionString;
+        }
+
+        private string GetRedisConnectionString()
+        {
+            var server = Environment.GetEnvironmentVariable("REDIS_SERVER");
+            var port = Environment.GetEnvironmentVariable("REDIS_PORT");
+
+            if (string.IsNullOrEmpty(server) && string.IsNullOrEmpty(port))
+            {
+                server = Configuration.GetValue<string>("Redis:Server");
+                port = Configuration.GetValue<int>("Redis:Port").ToString();
+            }
+
+            return $"{server}:{port}";
         }
     }
 }

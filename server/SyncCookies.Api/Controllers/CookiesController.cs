@@ -16,7 +16,7 @@ using SyncCookies.Services.Hubs;
 namespace SyncCookies.Api.Controllers
 {
     [Authorize]
-    [Route("api/cookies")]
+    [Route("obsolete/api/cookies")]
     [ApiController]
     public class CookiesController : ControllerBase
     {

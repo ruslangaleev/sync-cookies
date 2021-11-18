@@ -8,6 +8,7 @@ services:
     restart: unless-stopped
     depends_on:
       - db
+      - redis
     command: ["dotnet", "ef", "database update"]
 
   db:
@@ -18,4 +19,7 @@ services:
     image: nginx:latest
     restart: unless-stopped
     depends_on:
-      - synccookies.api   
+      - synccookies.api
+
+  redis:
+    image: "redis:alpine"

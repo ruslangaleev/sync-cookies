@@ -12,50 +12,60 @@ async function configure() {
     logger.warn(`ACCESS_TOKEN not found`);
     return false;
   }
-  logger.log(`ACCESS TOKEN: ${accessToken}`);
+  logger.info(`ACCESS TOKEN: ${accessToken}`);
 
   // Обнуляем, так как могут закрыть браузер, без переключения флага (IS_ENABLE)
-  await setInLocalStorageAsync(COOKIE_INFOES_STORAGE, null);
+  //await setInLocalStorageAsync(COOKIE_INFOES_STORAGE, null);
   
   await configureSignalR();
 
-  logger.info('configured');
+  logger.info('Настройка выполнена');
 
   return true;
 }
 
-async function run() {
-  // Подгружаем шаблоны с сервера
-  const result = await syncCookieClient.getCookies();
-  
-  if (!result.isSuccess) {
-    // setTimeout(run, 5000); // Это что то лишнее..
+async function initializeClients() {
+  const clientsFromServer = await v2syncCookieClient.getClients();
+  if (!clientsFromServer.isSuccess) {
     return false;
   }
 
-  logger.log('Cookie info from server', result.content);
+  clients = clientsFromServer.content;
 
-  await setInLocalStorageAsync(COOKIE_INFOES_STORAGE, result.content);
+  console.info("Клиенты:", clients);
+}
 
-	result.content.forEach(cookieInfo => {
-		cookieInfo.cookies.forEach(async (cookie) => {
-      // TODO: пояснение смотреть в cookiesOnChanged.js
-      
-			const key = UPDATE_FROM_SERVER_STORAGE + `_${cookieInfo.url}_${cookie.name}`;
-      logger.log(`Configure | updateFromServerkey: ${key} | existCookie:`, cookie);
-			await setInLocalStorageAsync(key, cookie);
-      
-			if (cookie.value) {
-				await setCookie({
-					url: cookieInfo.url,
-					name: cookie.name,
-					value: cookie.value,
-					domain: cookie.domain,
-					expirationDate: cookie.expirationDate
-				});
-			}
-		});
-	});
+async function initializeAllCookies() {
+  const result = await v2syncCookieClient.getCookies();
+  
+  if (!result.isSuccess) {
+    return false;
+  }
+
+  logger.info('Receive cookies from server', result.content);
+
+	result.content.forEach(async cookie => {
+    // храним с storage только clientId. Если будет изменение по кукам, нам достаточно этого знать
+    //await setInLocalStorageAsync(cookie.resourceUrl, cookie.clientId);
+
+    var newCookie = {
+      name: cookie.name,
+      value: cookie.value,
+      domain: cookie.domain,
+      expirationDate: cookie.expirationDate,
+      httpOnly: cookie.httpOnly,
+      path: cookie.path,
+      url: cookie.url
+    };
+
+    await setCookie(newCookie);
+	});  
+}
+
+async function run() {
+  await initializeClients();
+
+  await initializeAllCookies();
 
   // Подключаемся по сокетам
   await runSignalR();
@@ -71,7 +81,7 @@ async function stop() {
 }
 
 async function main() {
-  // TODO: В ACCESS_TOKEN содержится NULL. Выполнится ли run после configure?
+  logger.info('Запуск инициализации и настройки');
   const isSuccess = await configure();
   if (isSuccess) {
     await run();
@@ -97,14 +107,38 @@ async function configureSignalR() {
       return false;
     }
 
-    logger.log(`New Cookie`, cookie);
+    await setInLocalStorageAsync(`server_${cookie.url}`, cookie.name);
 
-    // записываем в хранилище что с сервера пришел новый кук, для того чтобы этот новый кук снова не отправить на сервер
-    const key = UPDATE_FROM_SERVER_STORAGE + `_${cookie.url}_${cookie.name}`;
-    await setInLocalStorageAsync(key, cookie);
+    await setCookie({
+      url: cookie.url,
+      name: cookie.name,
+      value: cookie.value,
+      domain: cookie.domain,
+      expirationDate: cookie.expirationDate,
+      httpOnly: cookie.httpOnly,
+      path: cookie.path
+    });
 
-    await setCookie(cookie);
+    logger.info(`Новый куки с сервера`, cookie);
   });
+
+  connection.on('RemoveCookie', async (cookie) => {
+    const isEnable = await getFromLocalStorageAsync(IS_ENABLE_STORAGE);
+
+    if (!isEnable) {
+      logger.warn('Extension is disabled');
+      return false;
+    }
+
+    await setInLocalStorageAsync(`server_${cookie.url}`, cookie.name);
+
+    await removeCookie({
+      name: cookie.name,
+      url: cookie.url
+    })
+
+    logger.info(`Удален кук с сервера`, cookie);
+  });  
   
   connection.onclose(main);
 }
@@ -115,7 +149,7 @@ async function runSignalR() {
 	try {
 		clearTimeout(signalRTimerId);
 
-		logger.log(`Try connect by signalR`);
+		logger.info(`Try connect by signalR`);
 		// Если при подключении выбрасывает exception и после переключении флага на DISABLE
 		const isEnable = await getFromLocalStorageAsync(IS_ENABLE_STORAGE);
 		if (!isEnable) {
@@ -133,7 +167,7 @@ async function runSignalR() {
 
 async function stopSignalR() {
 	try {
-		logger.log(`Try disconnect by signalR`);
+		logger.info(`Try disconnect by signalR`);
 		await connection.stop();
 		logger.info(`SignalR disconnected`);
 	} catch (error) {
