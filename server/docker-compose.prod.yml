@@ -12,6 +12,8 @@ services:
       - "5000:80"
     environment:
       DB_CONNECTION_STRING: "User ID=Wsonneya; Password=HXFa8KyfjqsQ; Server=db; Port=5432; Database=SyncCookies;"
+      REDIS_SERVER: "redis"
+      REDIS_PORT: 6379
     networks:
       - synccookies-prod
 
@@ -38,7 +40,7 @@ services:
       - synccookies-prod    
 
   redis:
-    container_name: redis
+    container_name: redis_prod
     ports:
       - "5001:6379"
     networks:
