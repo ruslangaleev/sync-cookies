@@ -41,6 +41,8 @@ namespace SyncCookies.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> NewCookies(NewCookie newCookie)
         {
+            var step = 1;
+
             try
             {
                 var client = await _clientRepo.GetByClientAsync(newCookie.ClientId);
@@ -49,18 +51,22 @@ namespace SyncCookies.Api.Controllers
                     return BadRequest($"Client not found by {nameof(newCookie.ClientId)}: {newCookie.ClientId}");
                 }
 
+                step = 2;
+
                 // TODO: Новые куки ложим в кэш под clientId
                 //var json = JsonConvert.SerializeObject(newCookie);
 
                 var dic = _cacheService.Get<Dictionary<string, NewCookie>>(newCookie.ClientId.ToString());
                 if (dic == null)
                 {
+                    step = 3;
                     dic = new Dictionary<string, NewCookie>();
                     dic.Add(newCookie.Name, newCookie);
                     _cacheService.Set(newCookie.ClientId.ToString(), dic);
                 }
                 else
                 {
+                    step = 4;
                     if (dic.ContainsKey(newCookie.Name))
                     {
                         dic[newCookie.Name] = newCookie;
@@ -75,17 +81,21 @@ namespace SyncCookies.Api.Controllers
 
                 //_cacheService.Set<NewCookie>(newCookie.ClientId.ToString(), newCookie);
 
+                step = 5;
                 var emailClaim = User.Claims.Where(t => t.Type == ClaimsIdentity.DefaultNameClaimType).Single();
                 var user = await _userRepo.GetAsync(emailClaim.Value);
 
+                step = 6;
                 // TODO: Раздаем всем куки кто подключен по сокету
                 var channels = await _clientRepo.GetChannelsAsync(newCookie.ClientId);
                 var userIds = channels.Select(t => t.UserId);
                 var users = await _userRepo.GetByUserIdsAsync(userIds);
+                step = 7;
                 var emails = users.Where(t => t.Email != user.Email).Select(t => t.Email);
                 //var connection = _connectionMapping.GetConnections(user.Email);
                 // получаем список всех пользователей текущего client и кроме текущего пользователя
                 var connectionIds = _connectionMapping.GetConnectionsByKeys(emails);
+                step = 8;
                 // TODO: а вот и ошибка - отправить всем кроме себя, а нужно отправить только своей подгруппе
                 await _cookieHub.Clients.Clients(connectionIds.ToList()).SendAsync("NewCookie", new
                 {
@@ -98,13 +108,13 @@ namespace SyncCookies.Api.Controllers
                     value = newCookie.Value,
                     url = newCookie.Url
                 });
-
-                return Ok("OK");
             }
-            catch (Exception e)
+            catch(Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest($"step: {step} | {e.Message}");
             }
+
+            return Ok("OK");
         }
 
         [HttpGet]
