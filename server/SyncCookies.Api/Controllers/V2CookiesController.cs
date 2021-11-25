@@ -103,7 +103,7 @@ namespace SyncCookies.Api.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest("BadRequest");
+                return BadRequest(e.Message);
             }
         }
 
