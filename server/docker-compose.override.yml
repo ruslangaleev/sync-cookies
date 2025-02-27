@@ -6,19 +6,17 @@ networks:
 
 services:
   synccookies.api:
-    container_name: api
-    image: synccookiesapi
+    # container_name: api
+    image: ${DOCKER_REGISTRY-}synccookiesapi
     ports:
       - "8082:80"
     environment:
       DB_CONNECTION_STRING: "User ID=testuser; Password=123; Server=db; Port=5432; Database=SyncCookiesTest;"
-      REDIS_SERVER: "redis"
-      REDIS_PORT: 6379
     networks:
       - synccookies-test
 
   db:
-    container_name: db
+    # container_name: db
     environment:
       POSTGRES_USER: "testuser"
       POSTGRES_PASSWORD: "123"
@@ -30,23 +28,11 @@ services:
     networks:
       - synccookies-test
 
-  proxy:
-    container_name: proxy
-    volumes:
-      - ./nginx.test.conf:/etc/nginx/nginx.conf
-    ports:
-      - "8080:8080"
-    networks:
-      - synccookies-test
-
-  redis:
-    container_name: redis
-    ports:
-      - "8083:6379"
-    networks:
-      - synccookies-test
-    volumes:
-      - redis:/usr/local/etc/redis
-
-volumes:
-  redis:
+  # proxy:
+  #   container_name: proxy
+  #   volumes:
+  #     - ./nginx.test.conf:/etc/nginx/nginx.conf
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - synccookies-test    

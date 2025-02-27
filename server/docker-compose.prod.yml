@@ -7,13 +7,11 @@ networks:
 services:
   synccookies.api:
     container_name: api_prod
-    image: synccookiesapi:1.0.1
+    image: ${DOCKER_REGISTRY-}synccookiesapi:1.0.1
     ports:
       - "5000:80"
     environment:
       DB_CONNECTION_STRING: "User ID=Wsonneya; Password=HXFa8KyfjqsQ; Server=db; Port=5432; Database=SyncCookies;"
-      REDIS_SERVER: "redis"
-      REDIS_PORT: 6379
     networks:
       - synccookies-prod
 
@@ -38,15 +36,3 @@ services:
       - "80:80"
     networks:
       - synccookies-prod    
-
-  redis:
-    container_name: redis_prod
-    ports:
-      - "5001:6379"
-    networks:
-      - synccookies-prod
-    volumes:
-      - redis:/usr/local/etc/redis
-
-volumes:
-  redis:      

@@ -8,18 +8,14 @@ services:
     restart: unless-stopped
     depends_on:
       - db
-      - redis
     command: ["dotnet", "ef", "database update"]
 
   db:
-    image: postgres:13
+    image: postgres
     restart: unless-stopped
 
-  proxy:
-    image: nginx:latest
-    restart: unless-stopped
-    depends_on:
-      - synccookies.api
-
-  redis:
-    image: "redis:alpine"
+  # proxy:
+  #   image: nginx:latest
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - synccookies.api   

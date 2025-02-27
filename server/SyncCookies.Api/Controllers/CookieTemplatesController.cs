@@ -115,7 +115,6 @@ namespace SyncCookies.Api.Controllers
 
             // send new cookie by resource id
             // templateId and resourceId -> users
-            /*
             var resources = await _clientRepo.GetByResourceAsync(newCookieTemplateDto.ResourceId);
             foreach (var item in resources.Data)
             {
@@ -135,8 +134,7 @@ namespace SyncCookies.Api.Controllers
                     name = template.Name,
                     url = resource.Url
                 });
-            } 
-            */
+            }           
 
             return Ok($"Template {templateId} updated");
         }

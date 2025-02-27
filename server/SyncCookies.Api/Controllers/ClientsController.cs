@@ -126,7 +126,7 @@ namespace SyncCookies.Api.Controllers
                 Cookies = cookies.Select(async t =>
                 {
                     var cookieTemplate = await _cookieTemplateRepo.GetByTemplateAsync(t.CookieTemplateId);
-                    return new CookieDto
+                    return new CookieDto 
                     { 
                         Value = t.Value,
                         Id = t.Id,
@@ -170,7 +170,6 @@ namespace SyncCookies.Api.Controllers
             await _clientRepo.SaveChangesAsync();
 
             // Оповещаем данного клиента, что у него новый источник
-            /*
             var connection = _connectionMapping.GetConnectionsByKey(user.Email);
             await _cookieHub.Clients.AllExcept(new string[] { connection.SingleOrDefault() }).SendAsync("NewResource", new 
             {
@@ -189,7 +188,6 @@ namespace SyncCookies.Api.Controllers
                     };
                 })
             });
-            */
 
             return Ok("Подписка успешно создана");
         }
@@ -218,10 +216,10 @@ namespace SyncCookies.Api.Controllers
             _clientRepo.RemoveChannel(channel);
             await _clientRepo.SaveChangesAsync();
 
-            //var resource = await _resourceRepo.GetAsync(client.ResourceId, true);
-            //var connection = _connectionMapping.GetConnectionsByKey(user.Email);
+            var resource = await _resourceRepo.GetAsync(client.ResourceId, true);
+            var connection = _connectionMapping.GetConnectionsByKey(user.Email);
 
-            //await _cookieHub.Clients.Client(connection.SingleOrDefault()).SendAsync("RemoveChannel", new { ResourceId = resource.Id });
+            await _cookieHub.Clients.Client(connection.SingleOrDefault()).SendAsync("RemoveChannel", new { ResourceId = resource.Id });
 
             return Ok("Подписка успешно удалена");
         }

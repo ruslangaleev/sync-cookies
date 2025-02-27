@@ -1,10 +1,8 @@
 const syncCookieClient = {
 	getCookies: async (traceId) => {
-		const accessToken = await getFromLocalStorageAsync(ACCESS_TOKEN_STORAGE);
-
 		const url = SERVER_ADDRESS() + `/api/cookies`;
-
-		logger.info(`TraceId: ${traceId}. Get cookies. Url: ${url}`);
+		logger.log(`[${traceId}][syncCookieClient.getCookies] Start by ${url}`);
+		const accessToken = await getFromLocalStorageAsync(ACCESS_TOKEN_STORAGE);
 		try {
 			const dataRequest = {
 				method: 'GET',
@@ -14,40 +12,31 @@ const syncCookieClient = {
 						'Authorization': 'Bearer ' + accessToken
 					},
 		  };
-			logger.info(`Request: url: ${url}, data:`, dataRequest);
 		  const response = await fetch(url, dataRequest);
-
-		  if (response.status == 401) {
-				logger.error('Server response status 401');
+			if (response.status == 200) {
+				logger.log(`[${traceId}][syncCookieClient.getCookies] Successfully by ${url}`);
+				const content = await response.json();
 				return {
-					isSuccess: false
-				};
-		  }
-		  
-		  const content = await response.json();
-		  
-		  if (response.status == 400) {
-				logger.error('Server response status 400');
-				return {
-					isSuccess: false,
-					errorMessage: content.errorMessage
-				};
-		  }
-		  
-		  if (response.status != 200) {
-				logger.error(`Server response status ${response.status}`)
-				return {
-					isSuccess: false,
-					errorMessage: content
+					isSuccess: true,
+					content: content
+				}				
+			} else {
+				logger.log(`[${traceId}][syncCookieClient.getCookies] Status ${response.status}`);
+				try {
+					const content = await response.json();
+					logger.log(`[${traceId}][syncCookieClient.getCookies] Error message: ${content}`);
+					return {
+						isSuccess: false,
+						errorMessage: content.errorMessage
+					};
+				} catch {
+					return {
+						isSuccess: false
+					};
 				}
-		  }
-
-		  return {
-				isSuccess: true,
-			  content: content
-		  };
+			}
 		} catch (error) {
-			logger.error('Request error by get cookies', error);
+			logger.error(`[${traceId}][syncCookieClient.getCookies] Error exception`);
 			return {
 				isSuccess: false
 			}
@@ -73,7 +62,7 @@ const syncCookieClient = {
 	  
 		const url = `${SERVER_ADDRESS()}/api/cookies/${cookieId}`;
 
-		logger.info(`TraceId: ${traceId} | Message: update cookie | Url: ${url} | dataContext:`, dataRequest);
+		logger.log(`TraceId: ${traceId} | Message: update cookie | Url: ${url} | dataContext:`, dataRequest);
 
 	  try {
 			const response = await fetch(url, dataRequest);
@@ -127,7 +116,7 @@ const syncCookieClient = {
 
 		const url = `${SERVER_ADDRESS()}/api/cookies/${cookieId}`;
 
-		logger.info(`TraceId: ${traceId} | Message: get cookie | Url: ${url} | DataRequest:`, dataRequest);
+		logger.log(`TraceId: ${traceId} | Message: get cookie | Url: ${url} | DataRequest:`, dataRequest);
 
 	  try {
 			const response = await fetch(url, dataRequest);

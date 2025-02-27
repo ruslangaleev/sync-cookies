@@ -28,12 +28,32 @@ async function getFromLocalStorageAsync(key) {
 	})
 }
 
-const divStyle = {
-  paddingBottom: 10
-}
-
 function App() {
-  return (<Home />);
+  return (
+    <Router>
+      <div className="app">
+        <nav>
+          <ul>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+            <li>
+              <Link to="/token">Token</Link>
+            </li>            
+          </ul>
+        </nav>
+
+        <Switch>
+          <Route path="/token">
+            <Token />
+          </Route>         
+          <Route path="/">
+            <Home />
+          </Route>                       
+        </Switch>
+      </div>
+    </Router>
+  );
 }
 
 class Home extends React.Component {
@@ -42,20 +62,18 @@ class Home extends React.Component {
     this.state = {
       accessToken: '',
       isEnable: false,
+      cookieName: '',
+      cookieUrl: ''
     };
   }
 
   async componentDidMount() {
-    var token = await getFromLocalStorageAsync(ACCESS_TOKEN_STORAGE);
+    const token = await getFromLocalStorageAsync(ACCESS_TOKEN_STORAGE);
     const isEnable = await getFromLocalStorageAsync(IS_ENABLE_STORAGE);
-
-    if (!token) {
-      token = "Токен не установлен";
-    }
 
     this.setState({
       accessToken: token,
-      isEnable: isEnable,
+      isEnable: isEnable
     });
   }
 
@@ -71,35 +89,17 @@ class Home extends React.Component {
     this.setState({ isEnable: false });
   }
 
-  // Авторизоваться
-  async logIn() {
-    await chrome.extension.getBackgroundPage().initializeAllCookies();
-  }
-
-  // Авторизовать
-  async authorize() {
-
-  }
-
-  async saveToken () {
-    await setInLocalStorageAsync(ACCESS_TOKEN_STORAGE, this.state.accessToken);
-  }; 
-  
-  changeToken = (event) => {
-    this.setState({ accessToken: event.target.value });
-  };  
-
   EnableButton() {
     if (this.state.isEnable) {
       return(
         <Button variant="contained" onClick={() => this.disableSync()}>
-          Выключить
+          Disable
         </Button>
       )
     } else {
       return (
         <Button variant="contained" color="primary" onClick={() => this.enableSync()}>
-          Включить
+          Enable
         </Button>
       )
     }
@@ -108,39 +108,44 @@ class Home extends React.Component {
   render() {
     return (
       <div>
-        <div>
-          <TextField id="outlined-basic" label="Токен авторизации" variant="outlined" onChange={this.changeToken} style={divStyle} />
-          <Button variant="contained" onClick={() => this.saveToken()}>
-            Записать токен в Storage
-          </Button>
-        </div>        
         <h2>Auth token:</h2>
         <div>
           <div className='token'>
-            <div style={divStyle}>
-              <div style={{overflow: "hidden", textOverflow: "ellipsis", width: '11rem'}}>
-                {this.state.accessToken}
-              </div>
-            </div>
+            {this.state.accessToken}
           </div>
+          <Button variant="contained" onClick={() => this.props.history.push("/token")}>
+            Edit
+          </Button>
         </div>
 
-        <div style={divStyle}>
-          <Button variant="contained" color="primary" onClick={() => this.logIn()}>
-            Авторизоваться
-          </Button>
-        </div>
-        <div style={divStyle}>
-          <Button variant="contained" onClick={() => this.authorize()}>
-            Авторизовать
-          </Button>
-        </div>
-        <div>
-          {this.EnableButton()}
-        </div>
+        <h2>Status:</h2>
+        {this.state.isEnable}
+
+        {this.EnableButton()}       
       </div>
     );
   }
+}
+
+function Token() {
+  const [token, setToken] = React.useState('');
+
+  const changeToken = (event) => {
+    setToken(event.target.value);
+  };
+
+  const saveToken = async () => {
+    await setInLocalStorageAsync(ACCESS_TOKEN_STORAGE, token);
+  };
+
+  return(
+    <div>
+      <TextField id="outlined-basic" label="Токен авторизации" variant="outlined" onChange={changeToken} />
+      <Button variant="contained" color="primary" onClick={saveToken}>
+        Сохранить
+      </Button>
+    </div>
+  );
 }
 
 export default App;

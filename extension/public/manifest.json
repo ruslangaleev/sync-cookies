@@ -1,25 +1,24 @@
 {
   "name": "SyncCookies",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "manifest_version": 2,
   "description": "Синхронизирует куки с разных устройств под одну учетную запись",
   "permissions": [
     "storage",
     "cookies",
     "<all_urls>",
-    "webRequest",
-    "tabs"
+    "webRequest"
   ],
   "icons": { 
     "16": "pechenie-16x16.png",
     "48": "pechenie-48x48.png",
     "128": "pechenie-128x128.png" },  
   "background": {
-    "scripts": ["base.js", "signalr.min.js", "startup.js", "v2syncCookiesClient.js", "cookiesOnChanged.js"],
+    "scripts": ["base.js", "signalr.min.js", "cookiesOnChanged.js"],
     "persistent": true 
   },
   "browser_action": {
     "default_popup": "index.html"
   },
-  "content_security_policy": "script-src 'self' 'sha256-dCjpN/Bq5JZtDIGuWo1SHd2iZ2WcqRAFSJnVEELSupA='; object-src 'self'"
+  "content_security_policy": "script-src 'self' 'sha256-A5S2zOz0DEczHfth+DWvuftVNd169Uo6nVlrplQZADg='; object-src 'self'"
 }

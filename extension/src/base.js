@@ -1,14 +1,13 @@
 /*global chrome*/
 // yarn build
 
-// const ENV = "DEBUG";
-const ENV = "PROD";
+const ENV = "DEBUG"; // Подключается на тестовый сервер
+//const ENV = "RELEASE"; // Подключается на боевой сервер, но с логированием для тестирования
+//const ENV = "PROD"; // Подключается на боевой сервер и без логгирования для тестирования
 
 export const IS_ENABLE_STORAGE = 'IS_ENABLE';
 // генерируется
-// const COOKIE_INFOES_STORAGE = 'COOKIE_INFOES';
-
-const CLIENT_INFO = "CLIENT_INFO";
+const COOKIE_INFOES_STORAGE = 'COOKIE_INFOES';
 // генерируется
 const UPDATE_FROM_SERVER_STORAGE = 'UPDATE_FROM_SERVER';
 // генерируется
@@ -25,8 +24,6 @@ const SERVER_ADDRESS = () => {
     // prod
     return "http://cookiestorage.ru";
 }
-
-var clients = [];
 
 const logger = {
   info: (message, obj) => {
@@ -63,9 +60,7 @@ async function setCookie(cookieSource) {
 			name: cookieSource.name,
 			value: cookieSource.value,
 			domain: cookieSource.domain,
-			expirationDate: cookieSource.expirationDate,
-            httpOnly: cookieSource.httpOnly,
-            path: cookieSource.path         
+			expirationDate: cookieSource.expirationDate
 		}, (cookie) => {
 			resolve(cookie);
 		})
